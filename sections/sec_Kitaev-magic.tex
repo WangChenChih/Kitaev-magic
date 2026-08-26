@@ -128,36 +128,41 @@ As one would expect, the $n = 1$ stabilizer R\'enyi entropy is an indeterminate 
 \textbf{In the toric code limit}, all non-zero coefficients $\mathfrak{C}_\mathfrak{D} = 1$ reduce to unity, \textbf{rendering $M_n = 0$}~\footnote{Note that there are $2^{N_d} = 2^{N/2} = 2^{N-N_p}$ configurations $[\mathfrak{D}]$ that give finite correlation functions $\mathfrak{C}_\mathfrak{D}$ in the toric code limit.}. This implies that the ground state is a perfect stabilizer state in the toric code limit, in agreement with our knowledge of the toric code ground state and its role as a stabilizer state. Eq.~\eqref{eq:genral-SRE} shows that the stabilizer R\'enyi entropy depends only on the equivalence class of the edge configurations and the Majorana fermionic correlation functions, implying that the matter sector governs the magic resource of the ground state. Therefore, it can be sampled using fermionic techniques~\cite{Wang-Yang-Zhou-Chen_2025}. Fig.~\ref{fig:SRE-numerics} shows numerical results for the stabilizer R\'enyi entropy. 
 \begin{figure}
     \centering
-    (a)\includegraphics[width=0.3\linewidth]{figures/SRE_figures/figures/stab-renyi-entropy/w_4_h_4.pdf}
-    (b)\includegraphics[width=0.3\linewidth]{figures/SRE_figures/figures/stab-renyi-entropy/w_4_h_4_varying-mag-field.pdf}
-    (c)\includegraphics[width=0.3\linewidth]{figures/SRE_figures/figures/stab-renyi-entropy/w_4_h_4_vs-mag.pdf}
-    \caption{Numerical calculation of the stabilizer R\'enyi entropy (SRE) for the ground state of a $4\times4$ system. (a) The trend of SRE with $\alpha$, which parameterizes the spin coupling by $J_x=J_y = \alpha/3$ and $J_z = 1 - 2\alpha/3$. The SRE jumps significantly at the gapped-gapless transition point. (b) The change of 2-SRE with varying $\alpha$ under an external magnetic field $h$. (c) The 2-SRE at the isotropic point $\alpha=1$ as a function of the magnetic field $h$.}
+    (a)\includegraphics[width=0.45\linewidth]{figures/SRE_figures/figures/stab-renyi-entropy/w_4_h_4.pdf}
+    %(b)\includegraphics[width=0.3\linewidth]{figures/SRE_figures/figures/stab-renyi-entropy/w_4_h_4_varying-mag-field.pdf}
+    (b)\includegraphics[width=0.45\linewidth]{figures/SRE_figures/figures/stab-renyi-entropy/w_4_h_4_vs-mag.pdf}
+    \caption{Numerical calculation of the stabilizer R\'enyi entropy (SRE) for the ground state of a $4\times4$ system. (a) The trend of SRE with $\alpha$, which parameterizes the spin coupling by $J_x=J_y = \alpha/3$ and $J_z = 1 - 2\alpha/3$. The SRE jumps significantly at the gapped-gapless transition point. 
+    %
+    %(b) The change of 2-SRE with varying $\alpha$ under an external magnetic field $h$.
+    %
+    (b) The 2-SRE as a function of the external magnetic field $h$ at the isotropic point $\alpha=1$.}
     \label{fig:SRE-numerics}
 \end{figure}
 
 
-\subsection{Reduced Density Matrix Stabilizer R\'enyi Entropy}
+\section{Stabilizer R\'enyi Entropy for Reduced Density Matrices}
 The stabilizer R\'enyi entropy can be extended to general mixed states~\cite{Leone-Oliviero-Hamma_2022}.
-\[
-\tilde{M}_2\lr{\rho} = 
--\ln\lr{
-        \frac{1}{2^N}
-        \sum_{\mathsf{S}\in\tilde{\mathcal{P}}_N}
-        \Tr\lr{\rho\mathsf{S}}^{4}
-    }
-- R_2\lr{\rho}
-\]
-where $R_2\lr{\rho} \equiv -\ln\lr{\Tr\rho^2}$ is the 2-R\'enyi entropy of the state $\rho$.
-\begin{equation}\label{eq:red-den-mat-sim-con}
-    \rho_A = \frac{1}{2^{N^A-N^A_p}} \mathcal{P}^{(p)}_A\sum_{[\mathfrak{D}]\subset A}\mathfrak{C}_{\mathfrak{D}}\Sigma_{\mathfrak{D}},
+\begin{equation}\label{eq:mixed-SRE-def}
+    \tilde{M}_2\lr{\rho} = 
+    -\ln\lr{
+            \frac{1}{2^N}
+            \sum_{\mathsf{S}\in\tilde{\mathcal{P}}_N}
+            \Tr\lr{\rho\mathsf{S}}^{4}
+        }
+    - R_2\lr{\rho}
 \end{equation}
+where $R_2\lr{\rho} \equiv -\ln\lr{\Tr\rho^2}$ is the 2-R\'enyi entropy of the state $\rho$. For the Kitaev model, the reduced density matrix of a subregion $A$ reads~\cite{wang2026exactorganizationdensitymatrices}
+\begin{equation}\label{eq:red-den-mat-sim-con}
+    \rho_A = \frac{1}{2^{N^A-N^A_p}} \hat{\Pi}_A\sum_{[\mathfrak{D}]\subset A}\mathfrak{C}_{\mathfrak{D}}\Sigma_{\mathfrak{D}}.
+\end{equation}
+The 2-R\'enyi entropy can be calculated straightforwardly,
 \begin{align*}
     \Tr_A\rho_A^2
     &=
     \frac{1}{2^{2\lr{N^A - N^A_p}}}
         \sum_{[\mathfrak{D}]\subset A}  \sum_{[\mathfrak{D}']\subset A} \mathfrak{C}_{\mathfrak{D}} \mathfrak{C}_{\mathfrak{D}'} 
         \Tr_A\lr{
-            \mathcal{P}^{(p)}_A 
+            \hat{\Pi}_A 
             \Sigma_{\mathfrak{D}} \Sigma_{\mathfrak{D}'}
         } \\
     &= 
@@ -166,20 +171,20 @@ where $R_2\lr{\rho} \equiv -\ln\lr{\Tr\rho^2}$ is the 2-R\'enyi entropy of the s
         \vartheta\lr{\mathfrak{D},\mathfrak{D}'}
         \mathfrak{C}_{\mathfrak{D}} \mathfrak{C}_{\mathfrak{D}'} 
         \Tr_A\lr{
-            \mathcal{P}^{(p)}_A 
+            \hat{\Pi}_A 
             \Sigma_{\mathfrak{D}\ominus\mathfrak{D}'}
         } \\
     &=
     \frac{1}{2^{2\lr{N^A - N^A_p}}}
         \sum_{[\mathfrak{D}]\subset A}  \eta_\mathfrak{D}
         \mathfrak{C}_{\mathfrak{D}}^2 
-        \Tr_A  \mathcal{P}^{(p)}_A  
-    = 
+        \Tr_A  \hat{\Pi}_A  \\
+    &= 
     \frac{1}{2^{N^A - N^A_p}}
         \sum_{[\mathfrak{D}]\subset A}
-        \mathfrak{C}_{\mathfrak{D}}^2 
+        \eta_\mathfrak{D} \mathfrak{C}_{\mathfrak{D}}^2. 
 \end{align*}
-
+The first term of Eq.~\eqref{eq:mixed-SRE-def} can also be expressed in terms of the coefficients $\mathfrak{C}_\mathfrak{D}$.
 \[
     \frac{1}{2^{N^A}}
         \sum_{\mathsf{S}\in\tilde{\mathcal{P}}_{N^A}}
@@ -194,9 +199,9 @@ where $R_2\lr{\rho} \equiv -\ln\lr{\Tr\rho^2}$ is the 2-R\'enyi entropy of the s
         \eta_\mathfrak{D}^2\mathfrak{C}_\mathfrak{D}^{4}
     =
     \frac{1}{2^{N^A-N^A_p}}
-    \sum_{[\mathfrak{D}]\subset A} \mathfrak{C}_\mathfrak{D}^{4}
+    \sum_{[\mathfrak{D}]\subset A}  \mathfrak{C}_\mathfrak{D}^{4}
 \]
-
+Together, the SRE for the reduced density matrix reduces to the following form,
 \begin{equation}\label{eq:RDM-SRE}
     \tilde{M}_2\lr{\rho_A} = 
     -\ln\lr{
@@ -204,14 +209,15 @@ where $R_2\lr{\rho} \equiv -\ln\lr{\Tr\rho^2}$ is the 2-R\'enyi entropy of the s
         \sum_{[\mathfrak{D}]\subset A} \mathfrak{C}_\mathfrak{D}^4 
         }
         {
-        \sum_{[\mathfrak{D}]\subset A}\mathfrak{C}_\mathfrak{D}^2
+        \sum_{[\mathfrak{D}]\subset A} \eta_\mathfrak{D} \mathfrak{C}_\mathfrak{D}^2
         } 
-    }
+    }.
 \end{equation}
 This form has already been proposed in Ref.~\cite{Wang-Yang-Zhou-Chen_2025}.
 
+The R\'enyi entropy (entanglement entropy) part can be calculated numerically by diagonalizing the correlation matrix of the Majorana fermions in the subsystem $A$.
 \[
-    \sum_{[\mathfrak{D}]\subset A}\mathfrak{C}_\mathfrak{D}^2
+    \sum_{[\mathfrak{D}]\subset A} \eta_\mathfrak{D} \mathfrak{C}_\mathfrak{D}^2
     =
     \sum_{\mrm{EP}(\mathfrak{D}) \subset R} \lrm{\mrm{Pf}(\mathsf{C}_\mathfrak{D})}^2 
     =
