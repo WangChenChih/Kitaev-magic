@@ -1,0 +1,291 @@
+\section{Exactly Solving for the Ground State}
+According to equation (29) of Ref.~\cite{Kitaev_2006}, we can diagonalize the Kitaev Hamiltonian in the momentum space if the gauge is fixed to be $u_{ij} = +1\forall\; (ij)$, 
+\[\hat{H} = \sum_{\bo{k}}\Psi^\dagger_{k}U(k)\Psi_{k} = \frac{1}{2}\sum_{\bo{k}}\lrm{is_{\bo{k}}d_{k,A}^\dagger d_{k,B} - is_{\bo{k}}^*d_{k,B}^\dagger d_{k,A}}\]
+where
+\begin{equation}\label{eq:spinor-def}
+    \Psi_k \equiv \frac{1}{\sqrt{N/2}}\sum_{\bo{r}}e^{-ik\cdot \bo{r}}\begin{pmatrix}
+        c_{\bo{r},A} \\
+        c_{\bo{r},B}
+       \end{pmatrix} 
+       = 
+       \begin{pmatrix}
+         d_{k,A} \\
+         d_{k,B}
+       \end{pmatrix}
+\end{equation}
+\[U(k) = \frac{1}{2}\begin{pmatrix}
+                      0 & is_{\bo{k}} \\
+                      -is_{\bo{k}}^* & 0 
+                    \end{pmatrix} \quad , \quad s_{\bo{k}} = 2\lr{J_xe^{ik\cdot \lr{\bo{a}_2 - \bo{a}_1}} + J_ye^{ik\cdot \bo{a}_2} + J_z}\]
+Note that the index $\bo{r}$ above is the Bravais lattice point, and $A$,$B$ represent the sublattice. If we further define a normal fermion operator, 
+\begin{equation}\label{gamm def.e}
+  \gamma_{\bo{r}} \equiv \frac{1}{2}\lr{c_{{\bo{r}},A} + ic_{{\bo{r}},B}}
+\end{equation}
+ then its Fourier transform would be 
+\[\gamma_{k} = \frac{1}{\sqrt{N/2}}\sum_{{\bo{r}}}\gamma_{{\bo{r}}}e^{-ik\cdot \bo{r}} = \frac{1}{2}\lr{d_{k,A} + id_{k,B}}\]
+In this way, the operator $d$ can be expressed in terms of $\gamma$ fermion,
+\begin{equation}\label{eq:d-gamma-transform}
+    \Psi_{\bo{k}}
+    =
+    \begin{pmatrix}
+        d_{\bo{k}A} \\
+        d_{\bo{k}B}
+    \end{pmatrix}
+    =
+    \begin{pmatrix}
+        1 & 1 \\
+        -i & i
+    \end{pmatrix}
+    \begin{pmatrix}
+        \gamma_{\bo{k}} \\
+        \gamma^\dagger_{-\bo{k}}
+    \end{pmatrix}
+\end{equation}
+Using the $\gamma$ operators to rewrite the Hamiltonian gives
+\[\hat{H} = \sum_{\bo{k}}\lrm{R_\bo{k}\cdot\lr{\gamma_{\bo{k}}^\dagger \gamma_{\bo{k}} - \gamma_{-\bo{k}}\gamma_{-\bo{k}}^\dagger} - iI_\bo{k}\cdot\lr{\gamma_{k}^\dagger \gamma_{-\bo{k}}^\dagger - \gamma_{-\bo{k}}\gamma_{k}}} = \sum_{\bo{k}}\phi_k^\dagger\bo{H}(k)\phi_k\]
+where $R_{\bo{k}} \equiv \mrm{Re}\lrg{s_{\bo{k}}}$ and $I_k \equiv \mrm{Im}\lrg{s_{\bo{k}}}$, and 
+\[\bo{H}(k) \equiv 
+\begin{pmatrix}
+    R_{\bo{k}} & -iI_{\bo{k}} \\
+    iI_k & -R_{\bo{k}} 
+\end{pmatrix} 
+\quad,\quad 
+\phi_k 
+\equiv 
+\begin{pmatrix}
+    \gamma_{\bo{k}} \\
+    \gamma_{-\bo{k}}^\dagger 
+\end{pmatrix}
+=
+\frac{1}{2}
+\begin{pmatrix}
+    1 & i \\
+    1 & -i
+\end{pmatrix}
+\Psi_{\bo{k}}
+\]
+Since 
+\[\bo{H}(k)^2 = \lr{R_{\bo{k}}^2 + I_k^2}\mathds{1} = \abs{s_{\bo{k}}}^2\mathds{1}\]
+we can see that the eigenvalues are $\epsilon_{k} = \pm\abs{s_{\bo{k}}}$, which is consistent with Kitaev's result (equation (32) in Ref.\cite{Kitaev_2006}). To diagonalize the matrix $\bo{H}$ we have to apply the Bogoliubov transformation,
+\begin{align*}
+U &= \frac{1}{\sqrt{2\abs{s_{\bo{k}}}}}
+        \begin{pmatrix}
+           \mrm{sgn}(I_k)\sqrt{\abs{s_{\bo{k}}}+R_{\bo{k}}} & -i\sqrt{\abs{s_{\bo{k}}}-R_{\bo{k}}} \\
+           i\sqrt{\abs{s_{\bo{k}}}-R_{\bo{k}}} & -\mrm{sgn}(I_k)\sqrt{\abs{s_{\bo{k}}}+R_{\bo{k}}} 
+         \end{pmatrix} 
+         = 
+         \begin{pmatrix}
+           \mrm{sgn}(I_k) u_k & -iv_k \\
+           i v_k &  -\mrm{sgn}(I_k) u_k
+         \end{pmatrix} \\
+         &= 
+         v_k\sigma^y + \mrm{sgn}(I_k)u_k\sigma^z
+\end{align*}
+such that\footnote{Those parameters in the matrix $U$ have the following properties: \textbf{(i)} $u_k = u_{-k}$, \textbf{(ii)} $v_{k} = v_{-k}$, and  \textbf{(iii)} $\mrm{sgn}(I_{k}) = -\mrm{sgn}(I_{-k})$} 
+\[U\bo{H}U^\dagger = \begin{pmatrix}
+                       \abs{s_{\bo{k}}} & 0 \\
+                       0 & -\abs{s_{\bo{k}}} 
+                     \end{pmatrix}\]
+Therefore, the excitation that diagonalize the Hamiltonian is 
+\begin{equation}\label{Bogo.e}
+\begin{pmatrix}
+    a_k \\
+    a_{-k}^\dagger 
+  \end{pmatrix} 
+  = 
+  U
+    \begin{pmatrix}
+     \gamma_{\bo{k}} \\
+     \gamma^\dagger_{-k} 
+    \end{pmatrix} 
+    = 
+    \begin{pmatrix}
+        \mrm{sgn}(I_k) u_k\gamma_{\bo{k}} - iv_k\gamma^\dagger_{-k} \\
+         i v_k\gamma_{\bo{k}} - \mrm{sgn}(I_k) u_k\gamma^\dagger_{-k} 
+   \end{pmatrix}
+\end{equation}
+As a result, the Kitaev ground state is the vacuum state of the Bogoliubov fermion, i.e., $a_{k}\ket{M} = 0$, which means $\ket{M}$ can be written as a BCS ground state just as we met in the BCS theory. The ground state can be written as the coherent state\footnote{
+The coefficient $g_k$ can be represented in terms of $u_k$ and $v_k$. As I have mentioned, the BCS-like ground state is expected to be the vacuum state of $a_k$ fermions for all possible $k$, thus, we have
+\[
+\lr{\mrm{sgn}(I_k) u_k\gamma_{\bo{k}} - iv_k\gamma_{-\bo{k}}^\dagger}\prod_{k}\lr{\mathds{1} + g_k\gamma_{\bo{k}}^\dagger \gamma_{-\bo{k}}^\dagger}\ket{\vac_\gamma} = 0
+\]
+Based on this, we obtain that 
+\[\mrm{sgn}(I_k) u_kg_k - iv_k = 0\]
+therefore
+\begin{equation}\label{g_k solution.e}
+  g_k = \mrm{sgn}(I_k)i\frac{v_k}{u_k} = \mrm{sgn}(I_k) i\sqrt{\frac{\abs{s_{\bo{k}}} - R_{\bo{k}}}{\abs{s_{\bo{k}}} + R_{\bo{k}}}} = i\frac{\abs{s_{\bo{k}}} - R_{\bo{k}}}{I_k}
+\end{equation}
+} of the $\gamma$-fermion pair,
+\begin{align*}
+  \ket{M} &= A\lrm{g}\exp\lr{\sum_{\bo{k}}g_k \gamma^\dagger_k \gamma^\dagger_{-k}}\ket{\vac_\gamma}\\
+   &= A\lrm{g}\exp\lr{\sum_{{\bo{r}}{\bo{r}'}}g_{{\bo{r}}{\bo{r}'}} \gamma^\dagger_{\bo{r}} \gamma^\dagger_{{\bo{r}'}}}\ket{\vac_\gamma}\\
+   &= A\lrm{g}\lrm{\mathds{1} + \sum_{{\bo{r}}{\bo{r}'}}g_{{\bo{r}}{\bo{r}'}} \gamma^\dagger_{\bo{r}} \gamma^\dagger_{{\bo{r}'}} + \frac{1}{2!}\sum_{{\bo{r}}{\bo{r}'}\kappa\lambda}g_{{\bo{r}}{\bo{r}'}}g_{\kappa\lambda
+   } \gamma^\dagger_{\bo{r}} \gamma^\dagger_{{\bo{r}'}}\gamma^\dagger_\kappa \gamma^\dagger_{\lambda} + \cdots}\ket{\vac_\gamma}
+\end{align*}
+where $\ket{\vac_\gamma}$ is the vacuum state of the $\gamma$-fermions, and $g_{{\bo{r}}{\bo{r}'}} = \frac{1}{2N}\sum_{\bo{k}}g_ke^{-ik\cdot(\bo{r}-\bo{r}')}$. 
+
+\subsection{With External Magnetic Field}
+For simplicity, we focus only on the isotropic limit~\cite{Kitaev_2006}. In this situation, applying an external magnetic field $\bo{h} = \lr{h_x,h_y,h_z}$, which is equivalent to adding a Zeeman perturbation $H' = -\sum_{i}\bo{h}\cdot\bog{\sigma}$, makes the Kitaev model equivalent to the Haldane honeycomb model~\cite{Haldane_1988} up to the third-order perturbation. The Hamiltonian under this approximation in the Majorana fermion representation reads
+\begin{align*}
+    H 
+    &= 
+    \frac{1}{2}J\sum_{\bo{r}}
+    \lr{
+        ic_{\bo{r}A}c_{\bo{r}+\hat{\bo{n}}_1,B} 
+        + 
+        ic_{\bo{r}A}c_{\bo{r}+\hat{\bo{n}}_2,B}
+        +
+        ic_{\bo{r}A}c_{\bo{r}B}
+        +\mrm{H.c.}
+    } \\
+    &\quad\quad\quad
+    + 
+    \frac{1}{2}\kappa
+    \sum_{\bo{r}}\sum_{\mu = A,B}
+    (-1)^\mu
+    \lr{-i
+        c_{\bo{r}\mu}c_{\bo{r}+\hat{\bo{n}}_1,\mu}
+        +i
+        c_{\bo{r}\mu}c_{\bo{r}+\hat{\bo{n}}_2,\mu}
+        -i
+        c_{\bo{r}\mu}c_{\bo{r}+\hat{\bo{n}}_1-\hat{\bo{n}}_2,\mu}
+        +
+        \mrm{H.c.}
+    }
+\end{align*}
+Expand the Majorana fermions in terms of the momentum modes $c_{\bo{r}\mu} = \frac{1}{\sqrt{N/2}}\sum_{\bo{k}} e^{i\bo{k}\cdot\bo{r}} d_{\bo{k}\mu}$, the second term proportional to $\kappa$ becomes
+\[
+\kappa
+\sum_{\bo{k}}
+\sum_{\mu}
+(-1)^{\mu}
+\frac{1}{2}
+\lr{
+    -i e^{i\bo{k}\cdot\hat{\bo{n}}_1}
+    +i e^{i\bo{k}\cdot\hat{\bo{n}}_2}
+    -i e^{i\bo{k}\cdot\lr{\hat{\bo{n}}_1 - \hat{\bo{n}}_2}}
+    + \mrm{c.c.}
+}   
+d^\dagger_{\bo{k}\mu} d_{\bo{k}\mu}
+\equiv
+\frac{1}{2}
+\sum_{\bo{k}}
+\Delta_{\bo{k}}
+\lr{
+d^\dagger_{\bo{k}A} d_{\bo{k}A}
+-
+d^\dagger_{\bo{k}B} d_{\bo{k}B}
+}
+\]
+where
+\begin{equation}\label{eq:gap-def}
+    \Delta_{\bo{k}} \equiv
+    2\kappa
+    \lrm{
+    \sin\lr{\bo{k}\cdot\hat{\bo{n}}_1}
+    -
+    \sin\lr{\bo{k}\cdot\hat{\bo{n}}_2}
+    +
+    \sin\lr{\bo{k}\cdot\lr{\hat{\bo{n}}_1 - \hat{\bo{n}}_2}}
+    }
+\end{equation}
+Converting the Hamiltonian into a spinor form defined by Eq.~\eqref{eq:spinor-def}, we obtain
+\begin{align*}
+H 
+&= 
+\frac{1}{2}
+\sum_{\bo{k}}
+\Psi_{\bo{k}}^\dagger
+\begin{pmatrix}
+  \Delta_{\bo{k}} & is_{\bo{k}} \\
+  -is_{\bo{k}}^* & -\Delta_{\bo{k}}
+\end{pmatrix}
+\Psi_{\bo{k}} \\
+&=
+\frac{1}{2}
+\sum_{\bo{k}}
+\phi_{\bo{k}}^\dagger
+\begin{pmatrix}
+    1 & i \\
+    1 & -i
+\end{pmatrix}
+\begin{pmatrix}
+  \Delta_{\bo{k}} & is_{\bo{k}} \\
+  -is_{\bo{k}}^* & -\Delta_{\bo{k}}
+\end{pmatrix}
+\begin{pmatrix}
+    1 & 1 \\
+    -i & i
+\end{pmatrix}
+\phi_{\bo{k}} \\
+&= 
+\sum_{\bo{k}}
+\phi_{\bo{k}}^\dagger
+\begin{pmatrix}
+    R_{\bo{k}} & \Delta_{\bo{k}} - iI_{\bo{k}} \\
+    \Delta_{\bo{k}} + iI_{\bo{k}} & -R_{\bo{k}}
+\end{pmatrix}
+\phi_{\bo{k}}
+\equiv 
+\sum_{\bo{k}} 
+\phi_{\bo{k}}^\dagger
+\bo{H}(\bo{k})
+\phi_{\bo{k}}
+\end{align*}
+The BdG Hamiltonian represented in terms of Pauli matrices reads
+\begin{equation}\label{eq:BdG-magnetic}
+\bo{H}(\bo{k})
+=
+\Delta_{\bo{k}} \tau^x
++
+I_{\bo{k}} \tau^y
++
+R_{\bo{k}} \tau^z
+\end{equation}
+\[
+\epsilon(\bo{k})
+=
+\sqrt{
+\abs{s_{\bo{k}}}^2 + \Delta_{\bo{k}}^2
+}
+\]
+The Bogoliubov transformation matrix is
+\begin{align}
+    U 
+    &= 
+    \frac{1}{\sqrt{2 \epsilon(\bo{k}) \lr{\epsilon(\bo{k}) + R_{\bo{k}}}}}
+    \begin{pmatrix}
+        \epsilon(\bo{k}) + R_{\bo{k}} & \Delta_{\bo{k}} - iI_{\bo{k}} \\
+        \Delta_{\bo{k}} + iI_{\bo{k}} & -\epsilon(\bo{k}) - R_{\bo{k}}
+    \end{pmatrix} \nonumber\\
+    & =
+    \frac{1}{\sqrt{2\epsilon(\bo{k})}}
+    \begin{pmatrix}
+        \sqrt{\epsilon(\bo{k}) + R_{\bo{k}}} & e^{-i\varphi_{\bo{k}}} \sqrt{\epsilon(\bo{k}) - R_{\bo{k}}} \\
+        e^{i\varphi_{\bo{k}}} \sqrt{\epsilon(\bo{k}) - R_{\bo{k}}} & - \sqrt{\epsilon(\bo{k}) + R_{\bo{k}}} 
+    \end{pmatrix} \nonumber \\
+    &\equiv
+    \begin{pmatrix}
+        u_{\bo{k}} & e^{-i\varphi_{\bo{k}}} v_{\bo{k}} \\
+        e^{i\varphi_{\bo{k}}}v_{\bo{k}} & -u_{\bo{k}}
+    \end{pmatrix} = U^\dagger = U^{-1}
+\end{align}
+where $\varphi_{\bo{k}} \equiv \arg\lr{\Delta_{\bo{k}} + iI_{\bo{k}}}$. Therefore, the elementary excitations that diagonalize the Hamiltonian are
+\begin{equation}\label{eq:magnetic-field-elementary-excitation}
+\begin{pmatrix}
+    a_k \\
+    a_{-k}^\dagger 
+  \end{pmatrix} 
+  = 
+  U
+    \begin{pmatrix}
+     \gamma_{\bo{k}} \\
+     \gamma^\dagger_{-k} 
+    \end{pmatrix} 
+    = 
+    \begin{pmatrix}
+        u_{\bo{k}}\gamma_{\bo{k}} + e^{-i\varphi_{\bo{k}}} v_k \gamma_{-\bo{k}}^\dagger \\
+        e^{i\varphi_{\bo{k}}} v_k \gamma_{\bo{k}} + u_{\bo{k}} \gamma_{-\bo{k}}^\dagger
+   \end{pmatrix}
+\end{equation}
+

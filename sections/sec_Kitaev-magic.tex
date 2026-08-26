@@ -1,0 +1,323 @@
+\section{Stabilizer R\'enyi Entropy of the Kitaev Ground State}
+The \textbf{Kitaev ground state is a stabilizer state} due to the Wilson symmetry, and the \textbf{stabilizer group is constituted by the plaquette operators} $\anglelr{\lrg{W_p}}$. It is also worth mentioning that the stabilizer projector can also be understood as a \textit{condensation operator} proposed in Ref.~\cite{Choi-Sanghavi-Shao-Zheng_2025}. The ground state density matrix reads~\cite{wang2026exactorganizationdensitymatrices}
+\[
+\ket{\mrm{Gnd}}\bra{\mrm{Gnd}} 
+= 
+\frac{1}{2^{N-N_p}} 
+\lr{\frac{\mathds{1} + \tilde{W}_v}{2}} 
+\lr{\frac{\mathds{1} + \tilde{W}_h}{2}}
+\prod_{p} \lr{\frac{\mathds{1} + W_p}{2}}
+\sum_{[\mathfrak{D}]} \mathfrak{C}_{\mathfrak{D}} \Sigma_{\mathfrak{D}}
+\]
+With this, the overlap of the ground state with the all-up  ferromagnetic state is
+\begin{align*}
+\abs{\braket{0}{\mrm{Gnd}}}^2
+&=
+\frac{1}{2^{N-N_p}} 
+\bra{0}
+\lr{\frac{\mathds{1} + \tilde{W}_v}{2}} 
+\lr{\frac{\mathds{1} + \tilde{W}_h}{2}}
+\prod_{p} \lr{\frac{\mathds{1} + W_p}{2}}
+\sum_{[\mathfrak{D}]} \mathfrak{C}_{\mathfrak{D}} \Sigma_{\mathfrak{D}}
+\ket{0} \\
+&=
+\frac{1}{2^{N+1}} 
+\sum_{[\mathfrak{D}]} 
+\sum_{\mathcal{C}}
+\lr{
+\braket{\mathcal{C}}{\mathfrak{D}}
++
+\braket{\mathcal{C}\ominus \mathcal{L}_v}{\mathfrak{D}}
++
+\braket{\mathcal{C} \ominus \mathcal{L}_h}{\mathfrak{D}}
++
+\braket{\mathcal{C}\ominus \mathcal{L}_v\ominus \mathcal{L}_h}{\mathfrak{D}}
+}
+\\
+&=
+\frac{1}{2^{N+1}} 
+\sum_{[\mathfrak{D}] \subset [\mathfrak{D}_Z]} 
+\sum_{\mathcal{C}}
+\lrm{
+\varphi(\mathcal{C}, \mathfrak{D})
++
+\varphi(\mathcal{C}\ominus \mathcal{L}_v, \mathfrak{D})
++
+\varphi(\mathcal{C} \ominus \mathcal{L}_h, \mathfrak{D})
++
+\varphi(\mathcal{C}\ominus \mathcal{L}_v\ominus \mathcal{L}_h, \mathfrak{D})
+}
+\\
+&
+\alert{\text{only vacuum and $Z$ configurations survive}}
+\end{align*}
+$\mathcal{C}$ represents contractible loops, including the vacuum $\mathcal{C} = \varnothing$.
+
+The ground state, which is a state in the stabilizer space, is
+\begin{equation}\label{eq:gnd-as-stab}
+    \ket{\mrm{Gnd}}
+    =
+    \lr{\frac{\mathds{1} + \tilde{W}_v}{2}} 
+    \lr{\frac{\mathds{1} + \tilde{W}_h}{2}}
+    \prod_{p} \lr{\frac{\mathds{1} + W_p}{2}}
+    \lrm{
+        \frac{\abs{\braket{0}{\mrm{Gnd}}}^{-1}}{2^{N-N_p}} 
+        \sum_{[\mathfrak{D}]} \mathfrak{C}_{\mathfrak{D}}
+        \ket{\mathfrak{D}}
+    }
+\end{equation}
+A $\alpha$-\textit{stabilizer R\'enyi entropy} is defined as~\cite{Leone-Oliviero-Hamma_2022},
+\begin{equation}\label{eq:stab-renyi-def}
+    M_{\alpha}\lr{\ket{\psi}} := 
+    \frac{1}{1 - \alpha} 
+    \ln\lr{
+        \sum_{\mathsf{S}\in\tilde{\mathcal{P}}_N}
+        \frac{1}{2^N}
+        \Tr\lr{\rho\mathsf{S}}^{2\alpha}
+    }
+\end{equation}
+where $\rho = \ket{\psi}\bra{\psi}$ is the pure state density matrix of $\ket{\psi}$. We need to bear in mind that the definition above given in Ref.~\cite{Leone-Oliviero-Hamma_2022} applies strictly to pure states. For mixed states, such a definition will not be a valid monotone. 
+
+For the Kitaev model, the stabilizer R\'enyi entropy can be calculated straightforwardly as follows
+\begin{equation}\label{eq:genral-SRE}
+    M_{\alpha}\lr{\ket{\psi}} 
+    = 
+    \frac{1}{1 - \alpha} 
+    \ln\lr{
+        \frac{1}{2^N} \sum_{\mathsf{S}\in\tilde{\mathcal{P}}_N}
+        \anglelr{\mathsf{S}}^{2\alpha}
+    } 
+    =
+    \frac{1}{1 - \alpha} 
+    \ln\lr{
+        \frac{1}{2^{N+1}}
+        \sum_{\mathfrak{D}}
+        \eta_\mathfrak{D}^\alpha
+        \mathfrak{C}_\mathfrak{D}^{2\alpha}
+    } 
+\end{equation}
+In the derivation, we need to be careful that $\Sigma_{\mathfrak{D}_{zz}} \propto \Sigma_{\mathfrak{D}_Z}$. Owing to this, we have to divide the summation by two to avoid overcounting. Here we demonstrate the proof of the property that $\anglelr{\mathsf{S}}^2 = \eta_\mathfrak{D}\mathfrak{C}_\mathfrak{D}^2$ if $\mathsf{S} \propto \Sigma_\mathfrak{D}$, which has been used in the above derivation.  Suppose $\Sigma_\mathfrak{D} = c\mathsf{S}$ with $c$ a specific constant. By definition, the phase $\eta_{\mathfrak{D}}$ is given by $\eta_\mathfrak{D} = \anglelr{\Sigma_\mathfrak{D}^2}$. Substituting the assumption into the definition of $\eta_\mathfrak{D}$ gives
+\[
+\anglelr{\Sigma_\mathfrak{D}^2} = \eta_\mathfrak{D} = \anglelr{c^2\mathsf{S}^2} = c^2
+\]
+With this result, we ultimately have the following.
+\[
+\anglelr{\mathsf{S}}^2 = \frac{1}{c^2}\anglelr{\Sigma_\mathfrak{D}}^2 = \eta_\mathfrak{D}\mathfrak{C}_\mathfrak{D}^2
+=
+\mrm{Pf}\lr{\mathsf{C}_\mathfrak{D}}^2
+\]
+For a pure Kitaev model, the phase $\eta_\mathfrak{D} = 1$ is trivial if $[\mathfrak{D}] \in \bo{G}$. Therefore, the ultimate form of the stabilizer R\'enyi entropy of the Kitaev ground state reduces to the following
+\begin{equation}
+    M_\alpha\lr{\ket{\mrm{Gnd}}} 
+    =
+    \frac{1}{1 - \alpha}
+    \ln\lr{
+        \frac{1}{2^{N - N_p}}
+        \sum_{[\mathfrak{D}] \in \bo{G}}\mathfrak{C}_\mathfrak{D}^{2\alpha}
+    }
+\end{equation}
+As one would expect, the $\alpha = 1$ stabilizer R\'enyi entropy is an indeterminate form due to the normalization condition Eq.~\eqref{eq:weak-condition}. Therefore, computing the $\alpha=1$ entropy requires taking the limit.
+\[
+    M_1(\ket{\mrm{Gnd}}) 
+    = 
+    \lim_{\alpha\to 1} 
+    \frac{1}{1 - \alpha}
+    \ln\lr{
+        \frac{1}{2^{N - N_p}}
+        \sum_{[\mathfrak{D}]\in\bo{G}}\mathfrak{C}_\mathfrak{D}^{2\alpha}
+    }
+    =
+    -\frac{1}{2^{N-N_p}}
+    \sum_{[\mathfrak{D}]\in\bo{G}} \mathfrak{C}_\mathfrak{D}^2
+    \ln \mathfrak{C}_\mathfrak{D}^2
+\]
+\textbf{In the toric code limit}, all non-zero coefficients $\mathfrak{C}_\mathfrak{D} = 1$ reduce to unity, \textbf{rendering $M_\alpha = 0$}~\footnote{Note that there are $2^{N_d} = 2^{N/2} = 2^{N-N_p}$ configurations $[\mathfrak{D}]$ that give finite correlation functions $\mathfrak{C}_\mathfrak{D}$ in the toric code limit.}. This implies that the quantum state is a perfect stabilizer state. Regarding the equivalence between the string algebra and the Majorana fermion representation of the edge configurations, the above equations imply that the magic is governed entirely by the matter sector. Therefore, it can be sampled using fermionic techniques~\cite{Wang-Yang-Zhou-Chen_2025}.
+
+In general, especially for cases with an external source that breaks TRS, such as a magnetic field, strings with sign factor $\eta_\mathfrak{D} = -1$ can also contribute to the density matrix. Thus, we need to use the most general magic Eq.~\eqref{eq:genral-SRE}. Since both $\eta_\mathfrak{D}$ and $\mathfrak{C}_\mathfrak{D}$ depend only on equivalent classes of the strings, we conclude that
+\[
+\sum_{\mathfrak{D}} \eta_\mathfrak{D}^\alpha \mathfrak{C}_\mathfrak{D}^{2\alpha}
+=
+2^{1 + N_p}
+\sum_{[\mathfrak{D}]} \eta_\mathfrak{D}^\alpha
+\mathfrak{C}_\mathfrak{D}^{2\alpha}
+\]
+Substituting this into the SRE formula, we obtain
+\begin{equation}
+    M_\alpha\lr{\ket{\mrm{Gnd}}} 
+    =
+    \frac{1}{1 - \alpha}
+    \ln\lr{
+        \frac{1}{2^{N - N_p}}
+        \sum_{[\mathfrak{D}] } 
+        \eta_\mathfrak{D}^\alpha \mathfrak{C}_\mathfrak{D}^{2\alpha}
+    }
+\end{equation}
+
+\subsection{Reduced Density Matrix Stabilizer R\'enyi Entropy}
+The stabilizer R\'enyi entropy can be extended to general mixed states~\cite{Leone-Oliviero-Hamma_2022}.
+\[
+\tilde{M}_2\lr{\rho} = 
+-\ln\lr{
+        \frac{1}{2^N}
+        \sum_{\mathsf{S}\in\tilde{\mathcal{P}}_N}
+        \Tr\lr{\rho\mathsf{S}}^{4}
+    }
+- R_2\lr{\rho}
+\]
+where $R_2\lr{\rho} \equiv -\ln\lr{\Tr\rho^2}$ is the 2-R\'enyi entropy of the state $\rho$.
+\begin{equation}\label{eq:red-den-mat-sim-con}
+    \rho_A = \frac{1}{2^{N^A-N^A_p}} \mathcal{P}^{(p)}_A\sum_{[\mathfrak{D}]\subset A}\mathfrak{C}_{\mathfrak{D}}\Sigma_{\mathfrak{D}},
+\end{equation}
+\begin{align*}
+    \Tr_A\rho_A^2
+    &=
+    \frac{1}{2^{2\lr{N^A - N^A_p}}}
+        \sum_{[\mathfrak{D}]\subset A}  \sum_{[\mathfrak{D}']\subset A} \mathfrak{C}_{\mathfrak{D}} \mathfrak{C}_{\mathfrak{D}'} 
+        \Tr_A\lr{
+            \mathcal{P}^{(p)}_A 
+            \Sigma_{\mathfrak{D}} \Sigma_{\mathfrak{D}'}
+        } \\
+    &= 
+    \frac{1}{2^{2\lr{N^A - N^A_p}}}
+        \sum_{[\mathfrak{D}]\subset A}  \sum_{[\mathfrak{D}']\subset A} 
+        \vartheta\lr{\mathfrak{D},\mathfrak{D}'}
+        \mathfrak{C}_{\mathfrak{D}} \mathfrak{C}_{\mathfrak{D}'} 
+        \Tr_A\lr{
+            \mathcal{P}^{(p)}_A 
+            \Sigma_{\mathfrak{D}\ominus\mathfrak{D}'}
+        } \\
+    &=
+    \frac{1}{2^{2\lr{N^A - N^A_p}}}
+        \sum_{[\mathfrak{D}]\subset A}  \eta_\mathfrak{D}
+        \mathfrak{C}_{\mathfrak{D}}^2 
+        \Tr_A  \mathcal{P}^{(p)}_A  
+    = 
+    \frac{1}{2^{N^A - N^A_p}}
+        \sum_{[\mathfrak{D}]\subset A}
+        \mathfrak{C}_{\mathfrak{D}}^2 
+\end{align*}
+
+\[
+    \frac{1}{2^{N^A}}
+        \sum_{\mathsf{S}\in\tilde{\mathcal{P}}_{N^A}}
+        \lrm{\Tr_A\lr{\rho_A\mathsf{S}}}^{4}
+    =
+    \frac{1}{2^{N^A}}
+    \sum_{\mathsf{S}\in\tilde{\mathcal{P}}_{N^A}}
+        \anglelr{\mathsf{S}}^{4}
+    =
+    \frac{1}{2^{N^A}}
+    \sum_{\mathfrak{D}\subset A}
+        \eta_\mathfrak{D}^2\mathfrak{C}_\mathfrak{D}^{4}
+    =
+    \frac{1}{2^{N^A-N^A_p}}
+    \sum_{[\mathfrak{D}]\subset A} \mathfrak{C}_\mathfrak{D}^{4}
+\]
+
+\begin{equation}\label{eq:RDM-SRE}
+    \tilde{M}_2\lr{\rho_A} = 
+    -\ln\lr{
+        \frac{
+        \sum_{[\mathfrak{D}]\subset A} \mathfrak{C}_\mathfrak{D}^4 
+        }
+        {
+        \sum_{[\mathfrak{D}]\subset A}\mathfrak{C}_\mathfrak{D}^2
+        } 
+    }
+\end{equation}
+This form has already been proposed in Ref.~\cite{Wang-Yang-Zhou-Chen_2025}.
+
+\[
+    \sum_{[\mathfrak{D}]\subset A}\mathfrak{C}_\mathfrak{D}^2
+    =
+    \sum_{\mrm{EP}(\mathfrak{D}) \subset R} \lrm{\mrm{Pf}(\mathsf{C}_\mathfrak{D})}^2 
+    =
+    \sum_{\mrm{EP}(\mathfrak{D}) \subset R} \det(\mathsf{C}_\mathfrak{D})
+    = 
+    \det\lr{\mathds{1} + \mathsf{C}_A}
+\]
+
+\[
+\Gamma_A = \frac{1}{2}\mathds{1} + \frac{i}{2} \mathsf{C}_A
+\]
+Since the spectrum of the correlation matrix $\Gamma_A$ is the single-particle entanglement spectrum 
+\[
+\gamma_{k,\pm} = \frac{1 \pm \nu_{k}}{2} \;, \qquad k = 1,2,\cdots, \frac{N^A}{2}
+\]
+of the reduced density matrix $\rho_A$ of the subregion $A$, the eigenvalues of $\mathsf{C}_A$ are 
+\begin{equation}\label{eq:CA-eigen}
+    \pm i\frac{\nu_k}{2} \;,\qquad k = 1,2,\cdots, \frac{N^A}{2}.
+\end{equation}
+Therefore, the 2-R\'enyi entropy reduces to
+\begin{align*}
+    -\ln\lr{ \frac{1}{2^{N^A-N^A_p}} \sum_{[\mathfrak{D}]\subset A} \mathfrak{C}_\mathfrak{D}^2}
+    &=
+    -\ln\det\lr{\mathds{1} + \mathsf{C}_A} + \lr{N^A - N^A_p}\ln 2 \\
+    &=
+    -\ln\lrm{\prod_{k = 1}^{N^A/2} \frac{1}{2}\lr{1 + i\nu_k}\lr{1 - i\nu_k} } + \lr{\frac{N^A}{2} - N^A_p}\ln 2 \\
+    &= -\sum_{k=1}^{N^A/2}\ln\lr{\frac{1 + \nu_k^2}{2}} + \lr{\frac{1}{2}\abs{\de A} - 1}\ln 2 
+\end{align*}
+Now, let's turn to the Pauli spectrum. Since any skew-symmetric matrix can be represented in the standard form, according to Eq.~\eqref{eq:CA-eigen}, there exists an orthogonal $O$ such that 
+\[
+\mathsf{C}_A = 
+O 
+\lrm{
+    \bigoplus_{k=1}^{N^A/2} \nu_k 
+    \begin{pmatrix}
+        0 & -1 \\
+        1 & 0
+    \end{pmatrix}
+}
+O^T
+\]
+where $\lrg{\pm \nu_k}$ is the set of eigenvalues of $\mathsf{C}_A$. 
+
+A submatrix $\mathsf{C}_\mathfrak{D}$ having a finite Pffafian $\mathfrak{C}_\mathfrak{D} = \mrm{Pf}(\mathsf{C}_\mathfrak{D})$ 
+
+\[
+\det\begin{pmatrix}
+    A & B \\
+    C & D
+\end{pmatrix}
+=
+\det(A)\det(D - CA^{-1}B)
+\]
+\[
+\det\begin{pmatrix}
+    \mathds{1} & \Gamma \\
+    -\Gamma^T & \mathds{1}
+\end{pmatrix}
+=
+\det\lr{\mathds{1} + \Gamma^T \Gamma}
+\]
+
+% \[
+% \mathsf{C}_\mathfrak{D} = 
+% O_\mathfrak{D}
+% \lrm{
+% \bigoplus_{k\in \mathfrak{D}}
+% \nu_k
+% \begin{pmatrix}
+%     0 & -i \\
+%     i & 0
+% \end{pmatrix}
+% }
+% O_\mathfrak{D}^T
+% \]
+% \[
+% \mrm{Pf}(\mathsf{C}_\mathfrak{D}) = \prod_{k\in \mrm{sepc}(\mathfrak{D})}\nu_k
+% \]
+% \[
+% \sum_{[\mathfrak{D}]\subset A} \mathfrak{C}_\mathfrak{D}^{2\alpha}
+% =
+% \sum_{\mrm{spec}(\mathfrak{D}) \subset [N^A]}\prod_{k\in\mrm{spec}(\mathfrak{D})} \nu_k^{2\alpha}
+% =
+% \lr{1 + \nu_k^{2\alpha}}^{N^A}
+% \]
+
+\alert{
+\textbf{\underline{Question:}} Does $\tilde{M}(\rho_A) = 0$ implies $M(\ket{\psi}) = 0$? 
+}
+
+
+
