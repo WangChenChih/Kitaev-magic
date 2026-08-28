@@ -321,6 +321,34 @@ There are two types of two-point correlation functions. The first one is the pai
     }
 \end{equation}
 
+\subsection{Nearest Neighbor Correlation Functions}
+In the toric code limit, the dominant correlation functions are those of nearest-neighbor lattice sites along the strong coupling direction. Without loss of generality, assume the dominant coupling is $J_z$, so that $J_x$ and $J_y$ can be treated as perturbations. In this case, the term $\abs{s_k}$ appearing in the denominator in the integrand is
+\begin{align*}
+    \abs{s_k}^{-1}
+    &=
+    \lrm{
+        1 + \delta^2 + \delta^2 + 2\delta\delta \cos\lr{\bo{k}\cdot\lr{\hat{\bo{n}} + \hat{\bo{n}}_2}} + 2\delta \cos\lr{\bo{k}\cdot\hat{\bo{n}}_1} + 2\delta \cos\lr{\bo{k}\cdot\hat{\bo{n}}_2}  
+    }^{-1/2} \\
+    &\approx
+    1 - 
+    \frac{1}{2}
+    \lrm{
+        1 + 2\delta^2 + 2\delta^2 \cos\lr{\bo{k}\cdot\lr{\hat{\bo{n}} + \hat{\bo{n}}_2}} + 2\delta \cos\lr{\bo{k}\cdot\hat{\bo{n}}_1} + 2\delta \cos\lr{\bo{k}\cdot\hat{\bo{n}}_2}
+    } \\
+    & \qquad
+        + 
+\end{align*}
+
+\[
+\delta
+=
+\frac{\alpha/3}{1 - 2\alpha/3}
+\approx
+\frac{\alpha}{3}
++
+\frac{2\alpha^2}{9}
+\]
+
 \subsection{Two-Points Correlation Functions in a Finite-Size System}
 In the following discussions, we consider the lattice geometry illustrated in Fig.~\ref{fig:lattice}.c. In this situation, there are three methods for labeling the position of lattice sites. 
 \begin{itemize}
