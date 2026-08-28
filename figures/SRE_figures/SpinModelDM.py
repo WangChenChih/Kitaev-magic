@@ -68,10 +68,10 @@ class SpinSystem:
     @Jx.setter
     def Jx(self, Jx: float):
         self._Jx = Jx
-        if not os.path.isdir(self.datapath):
-            self.calculate_CorrTable()
-        self._CoeTable_loaded = False   # reload the CoeTable if the parameter is changed
-        self.approx_bound = None
+        # if not os.path.isdir(self.datapath):
+        #     self.calculate_CorrTable()
+        # self._CoeTable_loaded = False   # reload the CoeTable if the parameter is changed
+        # self.approx_bound = None
         return
     
     @property
@@ -80,10 +80,10 @@ class SpinSystem:
     @Jy.setter
     def Jy(self, Jy: float):
         self._Jy = Jy
-        if not os.path.isdir(self.datapath):
-            self.calculate_CorrTable()
-        self._CoeTable_loaded = False   # reload the CoeTable if the parameter is changed
-        self.approx_bound = None
+        # if not os.path.isdir(self.datapath):
+        #     self.calculate_CorrTable()
+        # self._CoeTable_loaded = False   # reload the CoeTable if the parameter is changed
+        # self.approx_bound = None
         return
     
     @property
@@ -92,10 +92,10 @@ class SpinSystem:
     @Jz.setter
     def Jz(self, Jz: float):
         self._Jz = Jz
-        if not os.path.isdir(self.datapath):
-            self.calculate_CorrTable()
-        self._CoeTable_loaded = False   # reload the CoeTable if the parameter is changed
-        self.approx_bound = None
+        # if not os.path.isdir(self.datapath):
+        #     self.calculate_CorrTable()
+        # self._CoeTable_loaded = False   # reload the CoeTable if the parameter is changed
+        # self.approx_bound = None
         return
 
     @property
