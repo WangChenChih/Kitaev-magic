@@ -8,6 +8,7 @@ import scipy.sparse as sp
 from scipy.special import comb, factorial
 # from scipy import integrate
 from pfapack import pfaffian as pf  # computing pfaffian
+from scipy import integrate
 import math
 import os
 import json
@@ -17,7 +18,7 @@ class SpinSystem:
     def __init__(self, 
                  width:int=4, height:int=4, 
                  Jz:float=1, Jx:float=1, Jy:float=1,
-                 h:float=0):
+                 h:float=0, thermo_limit:bool=False):
         '''
         width and height of the chosen geometric region. The shape of the region is restricted 
         to be rectangular. 
@@ -49,7 +50,9 @@ class SpinSystem:
         self._CoeTable_loaded = False   # if the CoeTable has been loaded, then keep it to avoid repleatedly loeading it again and again.
         self._CoeTable = None
 
-        self._full_corr_mat = None
+        self.full_corr_mat = None
+
+        self._thermo_limit = thermo_limit
 
         self.approx_bound = None
 
@@ -68,10 +71,10 @@ class SpinSystem:
     @Jx.setter
     def Jx(self, Jx: float):
         self._Jx = Jx
-        # if not os.path.isdir(self.datapath):
-        #     self.calculate_CorrTable()
-        # self._CoeTable_loaded = False   # reload the CoeTable if the parameter is changed
-        # self.approx_bound = None
+        self.full_corr_mat = None
+        self._CoeTable_loaded = False   # reload the CoeTable if the parameter is changed
+        self._CoeTable = None
+        self.approx_bound = None
         return
     
     @property
@@ -80,10 +83,10 @@ class SpinSystem:
     @Jy.setter
     def Jy(self, Jy: float):
         self._Jy = Jy
-        # if not os.path.isdir(self.datapath):
-        #     self.calculate_CorrTable()
-        # self._CoeTable_loaded = False   # reload the CoeTable if the parameter is changed
-        # self.approx_bound = None
+        self.full_corr_mat = None
+        self._CoeTable_loaded = False   # reload the CoeTable if the parameter is changed
+        self._CoeTable = None
+        self.approx_bound = None
         return
     
     @property
@@ -92,10 +95,10 @@ class SpinSystem:
     @Jz.setter
     def Jz(self, Jz: float):
         self._Jz = Jz
-        # if not os.path.isdir(self.datapath):
-        #     self.calculate_CorrTable()
-        # self._CoeTable_loaded = False   # reload the CoeTable if the parameter is changed
-        # self.approx_bound = None
+        self.full_corr_mat = None
+        self._CoeTable_loaded = False   # reload the CoeTable if the parameter is changed
+        self._CoeTable = None
+        self.approx_bound = None
         return
 
     @property
@@ -104,9 +107,23 @@ class SpinSystem:
     @h.setter
     def h(self, h: float):
         self._h = h
+        self.full_corr_mat = None
+        self._CoeTable = None
         if not os.path.isdir(self.datapath):
             self.calculate_CorrTable()
         self._CoeTable_loaded = False   # reload the CoeTable if the parameter is changed
+        self.approx_bound = None
+        return
+
+    @property
+    def thermo_limit(self):
+        return self._thermo_limit
+    @thermo_limit.setter
+    def thermo_limit(self, thermo_limit: bool):
+        self._thermo_limit = thermo_limit
+        self.full_corr_mat = None
+        self._CoeTable_loaded = False
+        self._CoeTable = None
         self.approx_bound = None
         return
     
@@ -123,24 +140,6 @@ class SpinSystem:
                 self._CoeTable = json.load(file)
         self._CoeTable_loaded = True
         return initial
-
-    @property
-    def full_corr_mat_update(self)->np.ndarray:
-        '''
-        C_{ij} =    0           ;   i = j
-                =    <-ic_ic_j>  ;   i neq j
-        '''
-        # self.calculate_CorrTable()
-        corr_mat = np.zeros((self.N, self.N))
-        for i in np.arange(self.N):
-            for j in np.arange(i, self.N):
-                if i == j:
-                    corr_mat[i,i] = 0
-                else:
-                    corr_mat[i,j] = self.corr_engine(n1=i, n2=j)
-                    corr_mat[j,i] = - corr_mat[i,j]
-        self._full_corr_mat = corr_mat
-        return None
     
     ################### correlation functions ###################
     """
@@ -188,6 +187,93 @@ class SpinSystem:
     def ep(self, k1:float, k2:float)->float:
         return np.sqrt((self.sk(k1=k1, k2=k2))**2 + (self.Delta(k1=k1, k2=k2))**2)
     
+    def corr_integrand(self, k1:int, k2:int, dx:int, dy:int, pair_type:str)->float:
+        """
+        ``pair_type`` = 'AA', 'BB', 'AB', 'BA'
+        """
+        R, I, epsilon, Delta = self.Rk(k1=k1, k2=k2), self.Ik(k1=k1, k2=k2), self.ep(k1=k1, k2=k2), self.Delta(k1=k1, k2=k2)
+        if epsilon == 0:  # avoid being divided by zero
+            integrand = 0
+        else:
+            if pair_type == 'AA':
+                phase = 2*np.pi*(k1*dx + k2*dy)
+                integrand = - Delta * np.sin(phase) / epsilon
+            elif pair_type == 'BB':
+                phase = 2*np.pi*(k1*dx + k2*dy)
+                integrand = Delta * np.sin(phase) / epsilon
+            elif pair_type == 'AB':
+                phase = 2*np.pi*(k1*dx + k2*dy)
+                integrand = (R*np.cos(phase) + I*np.sin(phase)) / epsilon
+            elif pair_type == 'BA':
+                phase = - 2*np.pi*(k1*dx + k2*dy)   # the relative position is also flipped after exchanging the position of the two majorana fermion operators
+                integrand = - (R*np.cos(phase) + I*np.sin(phase)) / epsilon
+            else:
+                raise ValueError("``pair_type`` must be 'AA', 'BB', 'AB', or 'BA'.")
+        return integrand
+
+    def corr_thermo_limit_engine_c(self, dx:int, dy:int, pair_type:bool)->float:
+        """
+        Two-points correlation function <-ic_{n1}c_{n2}>. Notice the existance of the imaginary number -i
+        """
+        int_value, err = integrate.dblquad(self.corr_integrand, 
+                                            0, 1, 
+                                            0, 1, 
+                                            args=(dx, dy, pair_type))
+        return  int_value
+        
+    def corr_thermo_limit_engine(self, n1:int, n2:int)->float:
+        """
+        Two-points correlation function <-ic_{n1}c_{n2}>. Notice the existance of the imaginary number -i
+        """
+        x1, y1, mu1 = self.dictionary_n_to_c(label=n1) 
+        x2, y2, mu2 = self.dictionary_n_to_c(label=n2)
+        dx, dy = x2 - x1, y2 - y1 
+
+        if n1==n2:  # A Majorana fermion operator squares to one. We don't need this value.
+            return None
+        else:       # The two Majorana fermions are at different positions
+            x1, y1, mu1 = self.dictionary_n_to_c(label=n1) 
+            x2, y2, mu2 = self.dictionary_n_to_c(label=n2)
+            dx, dy = x2 - x1, y2 - y1 
+            if mu1 == 0 and mu2 == 0:
+                pair_type = 'BB'
+            elif mu1 == 0 and mu2 == 1:
+                pair_type = 'BA'
+            elif mu1 == 1 and mu2 == 0:
+                pair_type = 'AB'
+            elif mu1 == 1 and mu2 == 1:
+                pair_type = 'AA'
+            else:
+                raise ValueError('Something went wrong.')
+            return self.corr_thermo_limit_engine_c(dx=dx, dy=dy, pair_type=pair_type)
+
+    def corr_engine_c(self, dx:int, dy:int, pair_type:bool)->float:
+        """
+        Two-points correlation function <-ic_{n1}c_{n2}>. Notice the existance of the imaginary number -i
+        This 
+        """
+        for nx in range(int(self.width/2)):
+            for ny in range(self.height):
+                k1 = nx / (self.width/2)
+                k2 = ny / self.height
+                R, I, epsilon, Delta = self.Rk(k1=k1, k2=k2), self.Ik(k1=k1, k2=k2), self.ep(k1=k1, k2=k2), self.Delta(k1=k1, k2=k2)
+                if epsilon == 0:  # avoid being divided by zero
+                    continue
+                else:
+                    if pair_type == 'AB':     # AB pairing
+                        phase = 2*np.pi*(k1*dx + k2*dy)
+                        corr_fun += (R*np.cos(phase) + I*np.sin(phase)) / epsilon
+                    elif pair_type == 'BA':   # BA pairing
+                        phase = - 2*np.pi*(k1*dx + k2*dy)   # the relative position is also flipped after exchanging the position of the two majorana fermion operators
+                        corr_fun += - (R*np.cos(phase) + I*np.sin(phase)) / epsilon
+                    elif pair_type == 'AA':   # AA pairing
+                        phase = 2*np.pi*(k1*dx + k2*dy)
+                        corr_fun += - Delta * np.sin(phase) / epsilon
+                    else:                       # BB pairing
+                        phase = 2*np.pi*(k1*dx + k2*dy)
+                        corr_fun += Delta * np.sin(phase) / epsilon
+        return (2/self.N) * corr_fun
+
     def corr_engine(self, n1:int, n2:int)->float:
         """
         Two-points correlation function <-ic_{n1}c_{n2}>. Notice the existance of the imaginary number -i
@@ -196,52 +282,51 @@ class SpinSystem:
         x1, y1, mu1 = self.dictionary_n_to_c(label=n1) 
         x2, y2, mu2 = self.dictionary_n_to_c(label=n2)
         dx, dy = x2 - x1, y2 - y1 
-        corr_fun = 0
 
         if n1==n2:  # A Majorana fermion operator squares to one. We don't need this value.
             return None
         else:       # The two Majorana fermions are at different positions
-            for nx in range(int(self.width/2)):
-                for ny in range(self.height):
-                    k1 = nx / (self.width/2)
-                    k2 = ny / self.height
-                    R, I, epsilon, Delta = self.Rk(k1=k1, k2=k2), self.Ik(k1=k1, k2=k2), self.ep(k1=k1, k2=k2), self.Delta(k1=k1, k2=k2)
-                    if epsilon == 0:  # avoid being divided by zero
-                        continue
-                    else:
-                        if n1%2==1 and n2%2==0:     # AB pairing
-                            phase = 2*np.pi*(k1*dx + k2*dy)
-                            corr_fun += (R*np.cos(phase) + I*np.sin(phase)) / epsilon
-                        elif n1%2==0 and n2%2==1:   # BA pairing
-                            phase = - 2*np.pi*(k1*dx + k2*dy)   # the relative position is also flipped after exchanging the position of the two majorana fermion operators
-                            corr_fun += - (R*np.cos(phase) + I*np.sin(phase)) / epsilon
-                        elif n1%2==1 and n2%2==1:   # AA pairing
-                            phase = 2*np.pi*(k1*dx + k2*dy)
-                            corr_fun += - Delta * np.sin(phase) / epsilon
-                        else:                       # BB pairing
-                            phase = 2*np.pi*(k1*dx + k2*dy)
-                            corr_fun += Delta * np.sin(phase) / epsilon
-            return (2/self.N) * corr_fun
+            if mu1==1 and mu2==1:
+                pair_type = 'AA'
+            elif mu1==0 and mu2==0:
+                pair_type = 'BB'
+            elif mu1==1 and mu2==0:
+                pair_type = 'AB'
+            else:
+                pair_type = 'BA'
+            return self.corr_engine_c(dx=dx, dy=dy, pair_type=pair_type)
     
     def calculate_CorrTable(self):
         """
         A dictionary with two-point correlation functions stored within it
         """
         print('\033[34mCreating CorrTable\033[0m')
+
+        def corr_func(dx, dy, pair_type):
+            if self.thermo_limit:
+                return self.corr_thermo_limit_engine_c(dx=dx, dy=dy, pair_type=pair_type)
+            else:
+                return self.corr_engine_c(dx=dx, dy=dy, pair_type=pair_type)
+            
         CorrTable = {}
-        for n in range(self.N):
-            # print('\033[34m%d-th corr function\033[0m' % n)
-            if n%2==1:  # AB pairing
-                CorrTable['%dAB'%n] = self.corr_engine(n1=1, n2=n+1) 
-                CorrTable['%dBA'%n] = self.corr_engine(n1=0, n2=n) 
-            else:       # AA and BB pairing
-                if n==0:    # -icc = -i cannot be stored in a JASON format.
-                    continue
-                CorrTable['%dAA'%n] = self.corr_engine(n1=0, n2=n)
-                CorrTable['%dBB'%n] = self.corr_engine(n1=1, n2=n+1)
+        for x in np.arange(-int(self.width/2), int(self.width) + 1):
+            for y in np.arange(-int(self.height), int(self.height)+1):
+                # print('\033[34m%d-th corr function\033[0m' % n)
+                # AB pairing
+                CorrTable['(%d,%d)AB'%(x,y)] = corr_func(dx=x, dy=y, pair_type='AB') 
+                # BA pairing
+                CorrTable['(%d,%d)BA'%(x,y)] = corr_func(dx=x, dy=y, pair_type='BA') 
+                # AA pairing
+                CorrTable['(%d,%d)AA'%(x,y)] = corr_func(dx=x, dy=y, pair_type='AA') 
+                # BB pairing
+                CorrTable['(%d,%d)BB'%(x,y)] = corr_func(dx=x, dy=y, pair_type='BB') 
         
+        if self.thermo_limit:
+            filename = 'CorrTable_thermo_limit.json'
+        else:
+            filename = 'CorrTable.json'
         os.makedirs(name=self.datapath, exist_ok=True)
-        with open(self.datapath  + '/' + "CorrTable.json", "w") as file:
+        with open(self.datapath  + '/' + filename, "w") as file:
             json.dump(CorrTable, file)  
         print('\033[34mCorrTable creation complete\033[0m')
         return  CorrTable
@@ -251,31 +336,63 @@ class SpinSystem:
         Two-points correlation function <-icc>. Notice the existance of the imaginary number -i
         This function is valid only for PBC
         """
-        if update:
-            os.remove(self.datapath+'/'+'CorrTable.json')
+        if self.thermo_limit:
+            filename = 'CorrTable_thermo_limit.json'
+        else:
+            filename = 'CorrTable.json'
 
-        if os.path.isfile(self.datapath+'/'+'CorrTable.json'):
-            with open(self.datapath + '/' + "CorrTable.json", "r") as file:
+        if update or not os.path.isfile(self.datapath+'/'+filename):
+            self.calculate_CorrTable()
+            if self.thermo_limit:
+                return self.corr_thermo_limit_engine(n1=n1, n2=n2)
+            else:
+                return self.corr_engine(n1=n1, n2=n2)
+        else:
+            with open(self.datapath + '/' + filename, "r") as file:
                 CorrTable = json.load(file)
 
-            l1, s1 = self.dictionary_n_to_l(label=n1)
-            l2, s2 = self.dictionary_n_to_l(label=n2)
+            x1, y1, mu1 = self.dictionary_n_to_c(label=n1) 
+            x2, y2, mu2 = self.dictionary_n_to_c(label=n2)
+            dx, dy = x2 - x1, y2 - y1 
 
-            dl, ds = (l2 - l1)%self.height, (s2 - s1)%self.width
-            dn = self.dictionary_l_to_n(layer=dl, site=ds)
-            # print('dn = %d' % dn)
-            if n1%2==1 and n2%2==0:
-                return CorrTable["%dAB" % dn] 
-            elif n1%2==0 and n2%2==1:
-                return CorrTable["%dBA" % dn] 
-            elif n1%2==0 and n2%2==0:
-                return CorrTable["%dBB" % dn] 
-            else:
-                return CorrTable["%dAA" % dn] 
-        else:
-            self.calculate_CorrTable()
-            return self.corr_engine(n1=n1, n2=n2)
+            if mu1==1 and mu2==0:   # AB pairing
+                return CorrTable['(%d,%d)AB'%(dx,dy)]
+            elif mu1==0 and mu2==1:   # BA pairing
+                return CorrTable['(%d,%d)BA'%(dx,dy)]
+            elif mu1==1 and mu2==1:   # AA pairing
+                return CorrTable['(%d,%d)AA'%(dx,dy)]
+            else:                      # BB pairing
+                return CorrTable['(%d,%d)BB'%(dx,dy)]
     
+    def full_corr_mat_update(self):
+        '''
+        C_{ij} =    0           ;   i = j
+                =    <-ic_ic_j>  ;   i neq j
+        '''
+        # self.calculate_CorrTable()
+        corr_mat = np.zeros((self.N, self.N))
+        tot_amount = (self.N + 1)*self.N / 2
+        progress = 1
+        count = 0
+        print('\033[34mProgress: Making Correlation Matrix\033[0m')
+        for i in np.arange(self.N):
+            for j in np.arange(i, self.N):
+                if i == j:
+                    corr_mat[i,i] = 0
+                else:
+                    corr_mat[i,j] = self.corr(n1=i, n2=j)
+                    corr_mat[j,i] = - corr_mat[i,j]
+
+                # progress report
+                count += 1
+                if int(10 * count / tot_amount) >= progress:
+                # if int(10 * reps_count / self.dim) >= progress:
+                    print('\033[34mProgress: %d/10\033[0m' % (progress))
+                    progress += 1
+
+        self.full_corr_mat = corr_mat
+        return None
+
     def Coefficient_engine(self, label:int)->list[int, float]:
         '''
         Return: (number of TRodd, pfaffian of the correlation matrix)
@@ -299,7 +416,9 @@ class SpinSystem:
                 if i == j:
                     cor_mat[i,i] = 0
                 else:
-                    cor_mat[i,j] = self._full_corr_mat[endpointset[i], endpointset[j]]
+                    if self.full_corr_mat is None:
+                        self.full_corr_mat_update()
+                    cor_mat[i,j] = self.full_corr_mat[endpointset[i], endpointset[j]]
                     cor_mat[j,i] = - cor_mat[i,j]
         if len(endpointset) == 0:
             cor_pfa = 1 # vacuum configuration
@@ -330,48 +449,61 @@ class SpinSystem:
         # else:
         #     path = "data/w_%d_h_%d/Jx_%.3f_Jy_%.3f_Jz_%.3f" % (self.width, self.height, 1, 1, 1)
 
-        if not os.path.isfile(path + '/CoeTable.json') or update:
-            print('\033[34mCreating coefficient table for Jx=%.3f, Jy=%.3f, Jz=%.3f, mag=%.3f\033[0m' % (self.Jx, self.Jy, self.Jz, self.h))
+        if self.thermo_limit:
+            filename = 'CoeTable_thermo_limit.json'
+        else:
+            filename = 'CoeTable.json'
 
-            # update full_corr_mat
-            self.full_corr_mat_update
+        if not os.path.isfile(path + '/' + filename) or update:
+            print('\033[34mCreating coefficient table for Jx=%.3f, Jy=%.3f, Jz=%.3f, mag=%.3f\033[0m' % (self.Jx, self.Jy, self.Jz, self.h))
             
             CoeTableDict = {}
             progress = 1
+            if self.thermo_limit:
+                count = 0
+                for D in range(self.dim):
+                    setA, setB = label_to_endpointset(label=D)
+                    if len(setA + setB)%2 == 1: # the number of endpoints must be even.
+                        count += 1
+                        continue
+                    CoeTableDict[D] = self.Coefficient_engine(label=D)
+                    # progress report
+                    count += 1
+                    if int(10 * count / self.dim) >= progress:
+                        print('\033[34mProgress: %d/10\033[0m' % (progress))
+                        progress += 1
+            else:
+                reps = self.representative_set()
+                reps_count = 0
+                for D in reps:   # we have PBC in both directions
+                    setA, setB = label_to_endpointset(label=D)
+                    if len(setA + setB)%2 == 1: # the number of endpoints must be even.
+                        reps_count += 1
+                        continue
 
-            reps = self.representative_set()
-            reps_count = 0
-            # for D in range(self.dim):
-            for D in reps:   
-                setA, setB = label_to_endpointset(label=D)
-                if len(setA + setB)%2 == 1: # the number of endpoints must be even.
+                    CoeTableDict[D] = self.Coefficient_engine(label=D)
+
+                    # configurations differ by a translation 
+                    for move_x in range(int(self.width/2)):
+                        for move_y in range(int(self.height)):
+                            D_move = self.translation_label(label=D, 
+                                                            move=[move_x, move_y])
+                            if D_move == D:
+                                pass
+                            else:
+                                CoeTableDict[D_move] = CoeTableDict[D]
+                    
+                    # progress report
                     reps_count += 1
-                    continue
-
-                CoeTableDict[D] = self.Coefficient_engine(label=D)
-
-                # configurations differ by a translation 
-                for move_x in range(int(self.width/2)):
-                    for move_y in range(int(self.height)):
-                        D_move = self.translation_label(label=D, 
-                                                        move=[move_x, move_y])
-                        if D_move == D:
-                            pass
-                        else:
-                            CoeTableDict[D_move] = CoeTableDict[D]
-                
-                # progress report
-                reps_count += 1
-                if int(10 * reps_count / len(reps)) >= progress:
-                # if int(10 * reps_count / self.dim) >= progress:
-                    print('\033[34mProgress: %d/10\033[0m' % (progress))
-                    progress += 1
-
+                    if int(10 * reps_count / len(reps)) >= progress:
+                    # if int(10 * reps_count / self.dim) >= progress:
+                        print('\033[34mProgress: %d/10\033[0m' % (progress))
+                        progress += 1
             os.makedirs(path, exist_ok=True)
-            with open(path + '/CoeTable.json', 'w') as file:
+            with open(path + '/' + filename, 'w') as file:
                 json.dump(CoeTableDict, file)
         else:
-            with open(path + '/CoeTable.json', 'r') as file:
+            with open(path + '/' + filename, 'r') as file:
                 CoeTableDict = json.load(file)
 
         return CoeTableDict
@@ -1437,19 +1569,19 @@ class SpinSystem:
 
         return sum(coe_array**2) / 2**(self.N/2)
 
-    def stab_renyi_entropy(self, alpha:int, 
+    def stab_renyi_entropy(self, n:int, 
                                 approximate:bool=False, 
                                 update:bool=False,
                                 lazy:bool = False)->np.ndarray:
         """
-        Compute the alpha-stabilizer Renyi entropy of the Kitaev ground state
-        M_alpha = (1-alpha)^{-1} ln( 2^{-N/2} * sum_{[D]} C_D^{2*alpha})
+        Compute the n-stabilizer Renyi entropy of the Kitaev ground state
+        M_n = (1-n)^{-1} ln( 2^{-N/2} * sum_{[D]} C_D^{2*n})
         """  
         # if approximate:
         #     coe_array = np.array(list(self.calculate_CoefficientTable_approx(update=update, lazy=lazy).values()))
         # else:
         #     coe_array = np.array(list(self.calculate_CoefficientTable(update=update).values()))
-        # if alpha == 1:
+        # if n == 1:
         #     coe_array_finite = []
         #     for index in range(len(coe_array)):
         #         if coe_array[index] != 0:
@@ -1462,16 +1594,27 @@ class SpinSystem:
         #         return - float(coe_array_finite**2 @ np.log(coe_array_finite**2)) / 2**(self.N/2)
         # else:
         #     if lazy:
-        #         return  (1-alpha)**(-1) * np.log( 2 * np.sum(coe_array**(2*alpha)) / 2**(self.N/2) )
+        #         return  (1-n)**(-1) * np.log( 2 * np.sum(coe_array**(2*n)) / 2**(self.N/2) )
         #     else:
-        #         return  (1-alpha)**(-1) * np.log( np.sum(coe_array**(2*alpha)) / 2**(self.N/2) )
+        #         return  (1-n)**(-1) * np.log( np.sum(coe_array**(2*n)) / 2**(self.N/2) )
         coe_info = np.array(list(self.calculate_CoefficientTable(update=update).values()))
         coe_array = coe_info[:,1]
-        if alpha == 1:
+        if n == 1:
             coe_array_finite = np.array([n for n in coe_array if n != 0])
             return - float(coe_array_finite**2  @ np.log(coe_array_finite**2)) / 2**(self.N/2) 
         else:
-            return (1-alpha)**(-1) * np.log( np.sum(coe_array**(2*alpha)) / 2**(self.N/2) )
+            return (1-n)**(-1) * np.log( np.sum(coe_array**(2*n)) / 2**(self.N/2) )
+
+    def RDM_2_stab_renyi_entropy(self, update=False):
+        self.thermo_limit = True
+        self.full_corr_mat_update()
+        coe_info = np.array(list(self.calculate_CoefficientTable(update=update).values()))
+        coe_array = coe_info[:,1]
+        denominator = la.det(np.eye(self.N) + self.full_corr_mat)
+        enumerator = np.sum(coe_array**4)
+        
+        return -np.log(enumerator / denominator)
+
             
 
 ################################## extra functions ##################################
