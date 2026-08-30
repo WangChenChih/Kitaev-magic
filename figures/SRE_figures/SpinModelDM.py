@@ -1,17 +1,17 @@
 import numpy as np
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 from scipy import linalg as la
 from scipy.sparse.linalg import LinearOperator
-from numpy import linalg as LA
-from itertools import permutations, combinations
+# from itertools import permutations, combinations
 import scipy.sparse as sp
 from scipy.special import comb, factorial
 # from scipy import integrate
 from pfapack import pfaffian as pf  # computing pfaffian
 from scipy import integrate
-import math
+# import math
 import os
 import json
+from numba import njit, prange, set_num_threads
 
 class SpinSystem:
 
@@ -255,6 +255,7 @@ class SpinSystem:
         """
         if tot_size is None:    # default: the total size is exactly the system size we set in the beginning
             tot_size = [self.width, self.height]
+        tot_num = tot_size[0] * tot_size[1]
 
         corr_fun = 0
         for nx in range(int(tot_size[0]/2)):
@@ -265,7 +266,7 @@ class SpinSystem:
                 corr_fun += self.corr_integrand(k1=k1, k2=k2, 
                                                 dx=dx, dy=dy,
                                                 pair_type=pair_type)
-        return (2/self.N) * corr_fun
+        return (2/tot_num) * corr_fun
 
     def corr_engine(self, n1:int, n2:int, tot_size:list[int,int]=None)->float:
         """
@@ -290,7 +291,7 @@ class SpinSystem:
                 pair_type = 'BA'
             return self.corr_engine_c(dx=dx, dy=dy, pair_type=pair_type, tot_size=tot_size)
     
-    def calculate_CorrTable(self, tot_size=None):
+    def calculate_CorrTable(self, tot_size:list[int,int]=None):
         """
         A dictionary with two-point correlation functions stored within it
         """
@@ -409,30 +410,15 @@ class SpinSystem:
         setA, setB = label_to_endpointset(label=label)
         endpointset = setA + setB
         endpointset.sort()
+        endpointset = np.array(endpointset, dtype=np.int64)
         if len(endpointset)%2 == 1:
             raise ValueError('There are supposed to be an even number of endpoints in total.')
 
-        cor_mat = np.zeros((len(endpointset), len(endpointset)))
-        for i in np.arange(len(endpointset)):
-            for j in np.arange(i, len(endpointset)):
-                if i == j:
-                    cor_mat[i,i] = 0
-                else:
-                    if self.full_corr_mat is None:  # create the correlation matrix if it has not had one
-                        self.full_corr_mat_update(tot_size=tot_size)
-                    cor_mat[i,j] = self.full_corr_mat[endpointset[i], endpointset[j]]
-                    cor_mat[j,i] = - cor_mat[i,j]
-        if len(endpointset) == 0:
-            cor_pfa = 1 # vacuum configuration
-        else:
-            cor_pfa = pfaffian(cor_mat)
-            # print('debug')
-            # print(cor_pfa)
-            # print(cor_mat)
-            # print('config_label = %d' % label)
-            # print(endpointset)
-            # print(cor_mat)
+        if self.full_corr_mat is None:  # create the correlation matrix if it has not had one
+            self.full_corr_mat_update(tot_size=tot_size)
 
+        cor_pfa = corr_pfaffian_calculator(mat=self.full_corr_mat, endpointset=endpointset)
+        
         num_trodd_strings = int(np.abs(len(setA) - len(setB)) / 2)  # the number of TRodd strings, which are strings with both endpoints in the same sublattice   
 
         return [num_trodd_strings, cor_pfa]
@@ -1772,6 +1758,7 @@ def pfaffian(A, overwrite_a=False, pivot_tol=1e-12, efficient=False):          #
     else:   # by definition
         return pfaffian_by_definition(A=A)
 
+# @njit(parallel=True)
 def pfaffian_by_definition(A):
     """
     Compute the Pfaffian of an antisymmetric matrix directly from its
@@ -1819,3 +1806,22 @@ def pfaffian_by_definition(A):
         return total
 
     return recurse(list(range(n)))
+
+# @njit(parallel=True)
+def corr_pfaffian_calculator(mat:np.ndarray, endpointset:np.ndarray)->float:
+    '''
+    Calculate the pfaffian 
+    '''
+    if len(endpointset) == 0:
+        cor_pfa = 1 # vacuum configuration
+    else:
+        cor_mat = np.zeros((len(endpointset), len(endpointset)))
+        for i in np.arange(len(endpointset)):
+            for j in np.arange(i, len(endpointset)):
+                if i == j:
+                    cor_mat[i,i] = 0
+                else:
+                    cor_mat[i,j] = mat[endpointset[i], endpointset[j]]
+                    cor_mat[j,i] = - cor_mat[i,j]
+        cor_pfa = pf.pfaffian(cor_mat)
+    return cor_pfa
