@@ -247,37 +247,31 @@ class SpinSystem:
                 raise ValueError('Something went wrong.')
             return self.corr_thermo_limit_engine_c(dx=dx, dy=dy, pair_type=pair_type)
 
-    def corr_engine_c(self, dx:int, dy:int, pair_type:bool)->float:
+    def corr_engine_c(self, dx:int, dy:int, pair_type:bool, tot_size:list[int,int]=None)->float:
         """
         Two-points correlation function <-ic_{n1}c_{n2}>. Notice the existance of the imaginary number -i
-        This 
+        ``tot_size`` = [width, height] is the total system size. Note that the total system size need not to be identical to the system size we set in the beginning since the system size may be merely a subsystem. 
+        The default value of ``tot_size`` is [self.width, self.height] we set in the beginning.
         """
-        for nx in range(int(self.width/2)):
-            for ny in range(self.height):
-                k1 = nx / (self.width/2)
-                k2 = ny / self.height
-                R, I, epsilon, Delta = self.Rk(k1=k1, k2=k2), self.Ik(k1=k1, k2=k2), self.ep(k1=k1, k2=k2), self.Delta(k1=k1, k2=k2)
-                if epsilon == 0:  # avoid being divided by zero
-                    continue
-                else:
-                    if pair_type == 'AB':     # AB pairing
-                        phase = 2*np.pi*(k1*dx + k2*dy)
-                        corr_fun += (R*np.cos(phase) + I*np.sin(phase)) / epsilon
-                    elif pair_type == 'BA':   # BA pairing
-                        phase = - 2*np.pi*(k1*dx + k2*dy)   # the relative position is also flipped after exchanging the position of the two majorana fermion operators
-                        corr_fun += - (R*np.cos(phase) + I*np.sin(phase)) / epsilon
-                    elif pair_type == 'AA':   # AA pairing
-                        phase = 2*np.pi*(k1*dx + k2*dy)
-                        corr_fun += - Delta * np.sin(phase) / epsilon
-                    else:                       # BB pairing
-                        phase = 2*np.pi*(k1*dx + k2*dy)
-                        corr_fun += Delta * np.sin(phase) / epsilon
+        if tot_size is None:    # default: the total size is exactly the system size we set in the beginning
+            tot_size = [self.width, self.height]
+
+        corr_fun = 0
+        for nx in range(int(tot_size[0]/2)):
+            for ny in range(tot_size[1]):
+                k1 = nx / (tot_size[0]/2)
+                k2 = ny / tot_size[1]
+                # R, I, epsilon, Delta = self.Rk(k1=k1, k2=k2), self.Ik(k1=k1, k2=k2), self.ep(k1=k1, k2=k2), self.Delta(k1=k1, k2=k2)
+                corr_fun += self.corr_integrand(k1=k1, k2=k2, 
+                                                dx=dx, dy=dy,
+                                                pair_type=pair_type)
         return (2/self.N) * corr_fun
 
-    def corr_engine(self, n1:int, n2:int)->float:
+    def corr_engine(self, n1:int, n2:int, tot_size:list[int,int]=None)->float:
         """
         Two-points correlation function <-ic_{n1}c_{n2}>. Notice the existance of the imaginary number -i
-        This function is valid only for PBC
+        ``tot_size`` = [width, height] is the total system size. Note that the total system size need not to be identical to the system size we set in the beginning since the system size may be merely a subsystem. 
+        The default value of ``tot_size`` is [self.width, self.height] we set in the beginning.
         """
         x1, y1, mu1 = self.dictionary_n_to_c(label=n1) 
         x2, y2, mu2 = self.dictionary_n_to_c(label=n2)
@@ -294,19 +288,20 @@ class SpinSystem:
                 pair_type = 'AB'
             else:
                 pair_type = 'BA'
-            return self.corr_engine_c(dx=dx, dy=dy, pair_type=pair_type)
+            return self.corr_engine_c(dx=dx, dy=dy, pair_type=pair_type, tot_size=tot_size)
     
-    def calculate_CorrTable(self):
+    def calculate_CorrTable(self, tot_size=None):
         """
         A dictionary with two-point correlation functions stored within it
         """
         print('\033[34mCreating CorrTable\033[0m')
 
         def corr_func(dx, dy, pair_type):
-            if self.thermo_limit:
+            # if the variable self.thermo_limit is True, then tot_size won't be taken, no matter we set it or not.
+            if self.thermo_limit:   
                 return self.corr_thermo_limit_engine_c(dx=dx, dy=dy, pair_type=pair_type)
             else:
-                return self.corr_engine_c(dx=dx, dy=dy, pair_type=pair_type)
+                return self.corr_engine_c(dx=dx, dy=dy, pair_type=pair_type, tot_size=tot_size)
             
         CorrTable = {}
         for x in np.arange(-int(self.width/2), int(self.width) + 1):
@@ -324,25 +319,31 @@ class SpinSystem:
         if self.thermo_limit:
             filename = 'CorrTable_thermo_limit.json'
         else:
-            filename = 'CorrTable.json'
+            if tot_size is None:    # default
+                filename = 'CorrTable.json'
+            else:
+                filename = f'CorrTable_totsize_{tot_size[0]}_{tot_size[1]}.json'
         os.makedirs(name=self.datapath, exist_ok=True)
         with open(self.datapath  + '/' + filename, "w") as file:
             json.dump(CorrTable, file)  
         print('\033[34mCorrTable creation complete\033[0m')
         return  CorrTable
     
-    def corr(self, n1:int, n2:int, update:bool=False)->float:
+    def corr(self, n1:int, n2:int, update:bool=False, tot_size:list[int,int]=None)->float:
         """
         Two-points correlation function <-icc>. Notice the existance of the imaginary number -i
         This function is valid only for PBC
         """
-        if self.thermo_limit:
+        if self.thermo_limit:   # if the variable self.thermo_limit is True, then tot_size won't be taken, no matter we set it or not.
             filename = 'CorrTable_thermo_limit.json'
         else:
-            filename = 'CorrTable.json'
+            if tot_size is None:    # default
+                filename = 'CorrTable.json'
+            else:
+                filename = f'CorrTable_totsize_{tot_size[0]}_{tot_size[1]}.json'
 
         if update or not os.path.isfile(self.datapath+'/'+filename):
-            self.calculate_CorrTable()
+            self.calculate_CorrTable(tot_size=tot_size)
             if self.thermo_limit:
                 return self.corr_thermo_limit_engine(n1=n1, n2=n2)
             else:
@@ -364,7 +365,7 @@ class SpinSystem:
             else:                      # BB pairing
                 return CorrTable['(%d,%d)BB'%(dx,dy)]
     
-    def full_corr_mat_update(self):
+    def full_corr_mat_update(self, tot_size:list[int,int]=None):
         '''
         C_{ij} =    0           ;   i = j
                 =    <-ic_ic_j>  ;   i neq j
@@ -380,7 +381,8 @@ class SpinSystem:
                 if i == j:
                     corr_mat[i,i] = 0
                 else:
-                    corr_mat[i,j] = self.corr(n1=i, n2=j)
+                    # NOTE: if self.thermo_limit is True, the tot_size won't be taken
+                    corr_mat[i,j] = self.corr(n1=i, n2=j, tot_size=tot_size)
                     corr_mat[j,i] = - corr_mat[i,j]
 
                 # progress report
@@ -393,7 +395,7 @@ class SpinSystem:
         self.full_corr_mat = corr_mat
         return None
 
-    def Coefficient_engine(self, label:int)->list[int, float]:
+    def Coefficient_engine(self, label:int, tot_size:list[int,int]=None)->list[int, float]:
         '''
         Return: (number of TRodd, pfaffian of the correlation matrix)
         Note that (i)^{number of TRodd} = phase factor
@@ -416,8 +418,8 @@ class SpinSystem:
                 if i == j:
                     cor_mat[i,i] = 0
                 else:
-                    if self.full_corr_mat is None:
-                        self.full_corr_mat_update()
+                    if self.full_corr_mat is None:  # create the correlation matrix if it has not had one
+                        self.full_corr_mat_update(tot_size=tot_size)
                     cor_mat[i,j] = self.full_corr_mat[endpointset[i], endpointset[j]]
                     cor_mat[j,i] = - cor_mat[i,j]
         if len(endpointset) == 0:
@@ -435,8 +437,10 @@ class SpinSystem:
 
         return [num_trodd_strings, cor_pfa]
 
-    def calculate_CoefficientTable(self, update:bool=False, standard:bool=False)->dict:
+    def calculate_CoefficientTable(self, update:bool=False, tot_size:list[int,int]=None)->dict:
         """
+        NOTE: If the region is exactly the entire system with PBC, please do not set the variable ``tot_size``, because we can take advantage of the PBC to reduce computational cost.
+        
         {
             config: (num of TRodd, pfaffian of the correlation matrix)
         }
@@ -452,27 +456,17 @@ class SpinSystem:
         if self.thermo_limit:
             filename = 'CoeTable_thermo_limit.json'
         else:
-            filename = 'CoeTable.json'
+            if tot_size is None:
+                filename = 'CoeTable.json'
+            else:
+                filename = f'CoeTable_totsize_{tot_size[0]}_{tot_size[1]}.json'
 
         if not os.path.isfile(path + '/' + filename) or update:
             print('\033[34mCreating coefficient table for Jx=%.3f, Jy=%.3f, Jz=%.3f, mag=%.3f\033[0m' % (self.Jx, self.Jy, self.Jz, self.h))
             
             CoeTableDict = {}
             progress = 1
-            if self.thermo_limit:
-                count = 0
-                for D in range(self.dim):
-                    setA, setB = label_to_endpointset(label=D)
-                    if len(setA + setB)%2 == 1: # the number of endpoints must be even.
-                        count += 1
-                        continue
-                    CoeTableDict[D] = self.Coefficient_engine(label=D)
-                    # progress report
-                    count += 1
-                    if int(10 * count / self.dim) >= progress:
-                        print('\033[34mProgress: %d/10\033[0m' % (progress))
-                        progress += 1
-            else:
+            if tot_size is None:    # default mode: the region is exactly the entire system, so it has PBC.
                 reps = self.representative_set()
                 reps_count = 0
                 for D in reps:   # we have PBC in both directions
@@ -499,6 +493,20 @@ class SpinSystem:
                     # if int(10 * reps_count / self.dim) >= progress:
                         print('\033[34mProgress: %d/10\033[0m' % (progress))
                         progress += 1
+            else:
+                count = 0
+                for D in range(self.dim):
+                    setA, setB = label_to_endpointset(label=D)
+                    if len(setA + setB)%2 == 1: # the number of endpoints must be even.
+                        count += 1
+                        continue
+                    CoeTableDict[D] = self.Coefficient_engine(label=D)
+                    # progress report
+                    count += 1
+                    if int(10 * count / self.dim) >= progress:
+                        print('\033[34mProgress: %d/10\033[0m' % (progress))
+                        progress += 1
+                        
             os.makedirs(path, exist_ok=True)
             with open(path + '/' + filename, 'w') as file:
                 json.dump(CoeTableDict, file)
@@ -508,92 +516,7 @@ class SpinSystem:
 
         return CoeTableDict
 
-    # def full_corr_mat(self)->np.ndarray:
-    #     '''
-    #     C_{ij} =    0           ;   i = j
-    #             =    <-ic_ic_j>  ;   i neq j
-    #     '''
-    #     # self.calculate_CorrTable()
-    #     corr_mat = np.zeros((self.N, self.N))
-    #     for i in np.arange(self.N):
-    #         for j in np.arange(i, self.N):
-    #             if i == j:
-    #                 corr_mat[i,i] = 0
-    #             else:
-    #                 corr_mat[i,j] = self.corr_engine(n1=i, n2=j)
-    #                 corr_mat[j,i] = - corr_mat[i,j]
-    #     return corr_mat
-    
-    def calculate_CoefficientTable_approx(self, update:bool=False, lazy:bool=False)->dict:
-        """
-        Upon observing the plotted curve, one gets an intuition that the most important terms are those located at both tails.
-        If one choose the `lazy` mode, the function will only compute one of the tails, and treat the other tail as a copy.
-        """
-        if update:
-            self.approx_bound = None
-
-        if lazy:
-            filename = 'CoeTable_approx_lazy.json'
-        else:
-            filename = 'CoeTable_approx.json'
-        if not os.path.isfile(self.datapath + '/' + filename) or update:
-            print('\033[34mCreating approximate coefficient table for Jx=%.3f, Jy=%.3f, Jz=%.3f\033[0m' % (self.Jx, self.Jy, self.Jz))
-
-            ### find the most important endpoint configurations
-            if self.approx_bound == None:
-                CoeTableDict_standard = self.calculate_CoefficientTable(standard=True)  # We choose one table as the standard. It is no need to calculate the standard table everytime.
-                coe_list = np.array([CoeTableDict_standard['%d'%n] for n in np.arange(self.num_total_config)])
-                sorted_index = np.argsort(coe_list)
-                sorted_coe_array = coe_list[sorted_index]
-
-                ## use sumrule normalization condition as an error indicator
-                err = 1 # a random large number that is larger than the tolerance 0.01
-                sum = 0
-                bound = 0   # coetable[-bound:] are the most important configs
-                while err > 0.01:
-                    if lazy:
-                        sum += 2 * sorted_coe_array[-bound-1]**2   # consider only one tail
-                    else:
-                        sum += sorted_coe_array[bound]**2 + sorted_coe_array[-bound-1]**2  
-                    err = 1 - sum /2**(self.N/2)   
-                    bound += 1
-                    # print(f'err = {err}')
-                self.approx_bound = bound
-
-            ### create the approximate table
-            CoeTableDict_approx = {}
-            progress = 1
-            counter = 0
-            if lazy:
-                index_range = sorted_index[-self.approx_bound:]
-            else:
-                index_range = np.hstack((sorted_index[:self.approx_bound], 
-                                        sorted_index[-self.approx_bound:]))
-            for index in index_range:
-                index = int(index)
-                setA, setB = number_to_config(N=self.N, number=index)
-                CoeTableDict_approx[index] = self.Coefficient_engine(setA=setA, setB=setB)
-
-                ## progree report
-                if lazy:
-                    total = self.approx_bound       # only one of the tails is considered
-                else:
-                    total = 2 * self.approx_bound   # both two tails are considered
-                if int(10 * counter / total) >= progress:
-                    print('\033[34mProgress: %d/10\033[0m' % (progress))
-                    progress += 1
-                counter += 1
-
-            os.makedirs(self.datapath, exist_ok=True)
-            with open(self.datapath + '/' + filename, 'w') as file:
-                json.dump(CoeTableDict_approx, file)
-        else:
-            with open(self.datapath + '/' + filename, 'r') as file:
-                CoeTableDict_approx = json.load(file)
-                
-        return CoeTableDict_approx
-
-    def Coefficient(self, num_config:int)->tuple[complex, float]:
+    def Coefficient(self, label:int, tot_size:list[int,int]=None)->tuple[complex, float]:
         '''
         Return the coefficient in front of each basis (configuration) by Wick's theorem.
         The output is a tuple (phase factor, pfaffian coefficient)
@@ -608,9 +531,17 @@ class SpinSystem:
 
         Note that the correlators are purely imaginary, so the calculation can be done under dtype=float 
         '''
-        if not os.path.isfile(self.datapath + '/CoeTable.json'):    # Create CoeTable first if it doesn't exists in the disk
+        if self.thermo_limit:
+            filename = 'CoeTable_thermo_limit.json'
+        else:
+            if tot_size is None:
+                filename = 'CoeTable.json'
+            else:
+                filename = f'CoeTable_totsize_{tot_size[0]}_{tot_size[1]}.json'
+
+        if not os.path.isfile(self.datapath + '/' + filename):    # Create CoeTable first if it doesn't exists in the disk
             self.calculate_CoefficientTable()
-            setA, setB = label_to_endpointset(label=num_config)
+            setA, setB = label_to_endpointset(label=label)
             return self.Coefficient_engine(setA=setA, setB=setB) 
         else:                                                   # load CoeTable from the disk if it exists.
             if self.CoeTable_loaded:            # if CoeTable has been loaded, then use the the table kept one instead of loaded it again and again. 
@@ -619,7 +550,8 @@ class SpinSystem:
             else:
                 with open(self.datapath + '/CoeTable.json', 'r') as file:
                     coe_dict = json.load(file)
-            return coe_dict['%d' % num_config]
+                    self.CoeTable_loaded
+            return coe_dict[f'{label}']
         
     ################### dictionary ###################
 
@@ -1577,26 +1509,6 @@ class SpinSystem:
         Compute the n-stabilizer Renyi entropy of the Kitaev ground state
         M_n = (1-n)^{-1} ln( 2^{-N/2} * sum_{[D]} C_D^{2*n})
         """  
-        # if approximate:
-        #     coe_array = np.array(list(self.calculate_CoefficientTable_approx(update=update, lazy=lazy).values()))
-        # else:
-        #     coe_array = np.array(list(self.calculate_CoefficientTable(update=update).values()))
-        # if n == 1:
-        #     coe_array_finite = []
-        #     for index in range(len(coe_array)):
-        #         if coe_array[index] != 0:
-        #             coe_array_finite.append(coe_array[index])
-        #     coe_array_finite = np.array(coe_array_finite)
-
-        #     if lazy:
-        #         return - 2 * float(coe_array_finite**2 @ np.log(coe_array_finite**2)) / 2**(self.N/2)
-        #     else:
-        #         return - float(coe_array_finite**2 @ np.log(coe_array_finite**2)) / 2**(self.N/2)
-        # else:
-        #     if lazy:
-        #         return  (1-n)**(-1) * np.log( 2 * np.sum(coe_array**(2*n)) / 2**(self.N/2) )
-        #     else:
-        #         return  (1-n)**(-1) * np.log( np.sum(coe_array**(2*n)) / 2**(self.N/2) )
         coe_info = np.array(list(self.calculate_CoefficientTable(update=update).values()))
         coe_array = coe_info[:,1]
         if n == 1:
@@ -1605,10 +1517,20 @@ class SpinSystem:
         else:
             return (1-n)**(-1) * np.log( np.sum(coe_array**(2*n)) / 2**(self.N/2) )
 
-    def RDM_2_stab_renyi_entropy(self, update=False):
-        self.thermo_limit = True
-        self.full_corr_mat_update()
-        coe_info = np.array(list(self.calculate_CoefficientTable(update=update).values()))
+    def RDM_2_stab_renyi_entropy(self, tot_size:list[int, int]=None, thermo_limit:bool=False, update=False):
+        '''
+        ``tot_size`` = [the width of the entire system, the height of ..]
+        If ``thermo_limit`` is true, the total system size is set to be infinite, and the correlation function is generated by the integration function.
+        The defualt value of ``thermo_limit`` is true, which means that the output is the data for an infinitely large system if one doesn't set ``tot_size``
+        '''
+        if thermo_limit:    # note that if termo_limit is true, then the tot_size won't be taken.
+            self.thermo_limit = True
+
+        if tot_size is None and thermo_limit==False:
+            raise KeyError('Please set the variable ``tot_size``. Otherwise, please use the function stab_renyi_entropy for calculating the pure state SRE.')
+        
+        self.full_corr_mat_update(tot_size=tot_size)
+        coe_info = np.array(list(self.calculate_CoefficientTable(update=update, tot_size=tot_size).values()))
         coe_array = coe_info[:,1]
         denominator = la.det(np.eye(self.N) + self.full_corr_mat)
         enumerator = np.sum(coe_array**4)
