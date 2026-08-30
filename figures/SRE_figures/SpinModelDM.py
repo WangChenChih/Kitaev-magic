@@ -11,7 +11,7 @@ from scipy import integrate
 # import math
 import os
 import json
-from numba import njit, prange, set_num_threads
+# from numba import njit, prange, set_num_threads
 
 class SpinSystem:
 
