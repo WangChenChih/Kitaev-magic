@@ -238,41 +238,21 @@ Together, the SRE for the reduced density matrix reduces to the following form,
         {
         \sum_{[\mathfrak{D}]\subset A} \eta_\mathfrak{D} \mathfrak{C}_\mathfrak{D}^2
         } 
-    }.
+    }
+    =
+    -\ln\lr{
+    \sum_{[\mathfrak{D}]\subset A} \mathfrak{C}_\mathfrak{D}^4
+    }
+    -
+    \ln{
+    \det\lr{
+    \mathds{1} + \mathsf{C}_A
+    }
+    }
+    .
 \end{equation}
 This form has already been proposed in Ref.~\cite{Wang-Yang-Zhou-Chen_2025}.
 
-The R\'enyi entropy (entanglement entropy) part can be calculated numerically by diagonalizing the correlation matrix of the Majorana fermions in the subsystem $A$.
-\[
-    \sum_{[\mathfrak{D}]\subset A} \eta_\mathfrak{D} \mathfrak{C}_\mathfrak{D}^2
-    =
-    \sum_{\mrm{EP}(\mathfrak{D}) \subset R} \lrm{\mrm{Pf}(\mathsf{C}_\mathfrak{D})}^2 
-    =
-    \sum_{\mrm{EP}(\mathfrak{D}) \subset R} \det(\mathsf{C}_\mathfrak{D})
-    = 
-    \det\lr{\mathds{1} + \mathsf{C}_A}
-\]
-
-\[
-\Gamma_A = \frac{1}{2}\mathds{1} + \frac{i}{2} \mathsf{C}_A
-\]
-Since the spectrum of the correlation matrix $\Gamma_A$ is the single-particle entanglement spectrum 
-\[
-\gamma_{k,\pm} = \frac{1 \pm \nu_{k}}{2} \;, \qquad k = 1,2,\cdots, \frac{N^A}{2}
-\]
-of the reduced density matrix $\rho_A$ of the subregion $A$, the eigenvalues of $\mathsf{C}_A$ are 
-\begin{equation}\label{eq:CA-eigen}
-    \pm i\frac{\nu_k}{2} \;,\qquad k = 1,2,\cdots, \frac{N^A}{2}.
-\end{equation}
-Therefore, the 2-R\'enyi entropy reduces to
-\begin{align*}
-    -\ln\lr{ \frac{1}{2^{N^A-N^A_p}} \sum_{[\mathfrak{D}]\subset A} \mathfrak{C}_\mathfrak{D}^2}
-    &=
-    -\ln\det\lr{\mathds{1} + \mathsf{C}_A} + \lr{N^A - N^A_p}\ln 2 \\
-    &=
-    -\ln\lrm{\prod_{k = 1}^{N^A/2} \frac{1}{2}\lr{1 + i\nu_k}\lr{1 - i\nu_k} } + \lr{\frac{N^A}{2} - N^A_p}\ln 2 \\
-    &= -\sum_{k=1}^{N^A/2}\ln\lr{\frac{1 + \nu_k^2}{2}} + \lr{\frac{1}{2}\abs{\de A} - 1}\ln 2 
-\end{align*}
 Now, let's turn to the Pauli spectrum. 
 
 
@@ -285,7 +265,7 @@ Now, let's turn to the Pauli spectrum.
     \centering
     (a)\includegraphics[height=0.2\textheight]{figures/SRE_figures/figures/stab-renyi-entropy/w_4_h_4_thermolimit.pdf}
     (b)\includegraphics[height=0.2\textheight]{figures/SRE_figures/figures/stab-renyi-entropy/w_4_h_4_finite_RDM.pdf}
-    \caption{(a) The mixed-state SRE in the thermodynamic limit calculated using the reduced density matrix of a subregion with size $4\time 4$. (b) Comparison of pure-state SRE and mixed-state SRE of the region with size $4\times 4$.}
+    \caption{(a) The mixed-state SRE in the thermodynamic limit calculated using the reduced density matrix of a subregion with size $4\time 4$. (b) Comparison of pure-state SRE and mixed-state SRE of the region with size $4\times 4$. In finite-size systems, the SRE as a function of coupling parameters shows a discontinuity at the gapped-gapless transition point. However, the jump decreases as the system size increases and eventually closes in the thermodynamic limit. }
     \label{fig:RDM-magic}
 \end{figure}
 
