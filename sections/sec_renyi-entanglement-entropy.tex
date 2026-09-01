@@ -1,0 +1,39 @@
+\section{R\'enyi Entropy}
+The R\'enyi entropy (entanglement entropy) part can be calculated numerically by diagonalizing the correlation matrix of the Majorana fermions in the subsystem $A$.
+\[
+    \sum_{[\mathfrak{D}]\subset A} \eta_\mathfrak{D} \mathfrak{C}_\mathfrak{D}^2
+    =
+    \sum_{\mrm{EP}(\mathfrak{D}) \subset R} \lrm{\mrm{Pf}(\mathsf{C}_\mathfrak{D})}^2 
+    =
+    \sum_{\mrm{EP}(\mathfrak{D}) \subset R} \det(\mathsf{C}_\mathfrak{D})
+    = 
+    \det\lr{\mathds{1} + \mathsf{C}_A}
+\]
+
+\[
+\Gamma_A = \frac{1}{2}\mathds{1} + \frac{i}{2} \mathsf{C}_A
+\]
+Since the spectrum of the correlation matrix $\Gamma_A$ is the single-particle entanglement spectrum 
+\[
+\gamma_{k,\pm} = \frac{1 \pm \nu_{k}}{2} \;, \qquad k = 1,2,\cdots, \frac{N^A}{2}
+\]
+of the reduced density matrix $\rho_A$ of the subregion $A$, the eigenvalues of $\mathsf{C}_A$ are 
+\begin{equation}\label{eq:CA-eigen}
+    \pm i\frac{\nu_k}{2} \;,\qquad k = 1,2,\cdots, \frac{N^A}{2}.
+\end{equation}
+Therefore, the 2-R\'enyi entropy reduces to
+\begin{align*}
+    -\ln\lr{ \frac{1}{2^{N^A-N^A_p}} \sum_{[\mathfrak{D}]\subset A} \mathfrak{C}_\mathfrak{D}^2}
+    &=
+    -\ln\det\lr{\mathds{1} + \mathsf{C}_A} + \lr{N^A - N^A_p}\ln 2 \\
+    &=
+    -\ln\lrm{\prod_{k = 1}^{N^A/2} \frac{1}{2}\lr{1 + i\nu_k}\lr{1 - i\nu_k} } + \lr{\frac{N^A}{2} - N^A_p}\ln 2 \\
+    &= 
+    \underbrace{
+    -\sum_{k=1}^{N^A/2}\ln\lr{\frac{1 + \nu_k^2}{2}} 
+    }_{\text{matter}}
+    + 
+    \underbrace{
+    \lr{\frac{1}{2}\abs{\de A} - 1}\ln 2 
+    }_{\text{gauge}}
+\end{align*}
