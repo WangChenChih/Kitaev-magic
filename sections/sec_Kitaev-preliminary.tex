@@ -322,22 +322,49 @@ There are two types of two-point correlation functions. The first one is the pai
 \end{equation}
 
 \subsection{Nearest Neighbor Correlation Functions}
-In the toric code limit, the dominant correlation functions are those of nearest-neighbor lattice sites along the strong coupling direction. Without loss of generality, assume the dominant coupling is $J_z$, so that $J_x$ and $J_y$ can be treated as perturbations. In this case, the term $\abs{s_k}$ appearing in the denominator in the integrand is
-\begin{align*}
-    \abs{s_k}^{-1}
+In the toric code limit, the dominant correlation functions are those of nearest-neighbor lattice sites along the strong coupling direction. Without loss of generality, assume the dominant coupling is $J_z$, so that $J_x = J_y = J_z \delta$ can be treated as perturbations. In this case, the term $\abs{s_k}$ appearing in the denominator in the integrand is
+\begin{align}
+    \frac{\abs{s_k}^2}{4 J_z^2}
     &=
+    1 + 2\delta^2 + 2\delta^2 \cos\lr{\bo{k}\cdot\lr{\hat{\bo{n}}_1 - \hat{\bo{n}}_2}} + 2\delta \cos\lr{\bo{k}\cdot\hat{\bo{n}}_1} + 2\delta \cos\lr{\bo{k}\cdot\hat{\bo{n}}_2} \nonumber \\
+    &= 
+    1 + 
+    2\delta^2\lrm{
+    1 + \cos\lr{\bo{k}\cdot\hat{\bo{n}}_1} \cos\lr{\bo{k}\cdot\hat{\bo{n}}_2}
+    +
+    \sin\lr{\bo{k}\cdot\hat{\bo{n}}_1}
+    \sin\lr{\bo{k}\cdot\hat{\bo{n}}_2}
+    } \nonumber \\
+    &\qquad+
+    2\delta\lrm{
+    \cos\lr{\bo{k}\cdot\hat{\bo{n}}_1}
+    +
+    \cos\lr{\bo{k}\cdot\hat{\bo{n}}_2}
+    } \nonumber \\
+    &=
+    \lrm{1 + \delta \cos(\bo{k}\cdot\hat{\bo{n}}_1)
+    +
+    \delta \cos(\bo{k}\cdot\hat{\bo{n}}_2)
+    }^2
+    +
     \lrm{
-        1 + \delta^2 + \delta^2 + 2\delta\delta \cos\lr{\bo{k}\cdot\lr{\hat{\bo{n}} + \hat{\bo{n}}_2}} + 2\delta \cos\lr{\bo{k}\cdot\hat{\bo{n}}_1} + 2\delta \cos\lr{\bo{k}\cdot\hat{\bo{n}}_2}  
-    }^{-1/2} \\
-    &\approx
-    1 - 
-    \frac{1}{2}
-    \lrm{
-        1 + 2\delta^2 + 2\delta^2 \cos\lr{\bo{k}\cdot\lr{\hat{\bo{n}} + \hat{\bo{n}}_2}} + 2\delta \cos\lr{\bo{k}\cdot\hat{\bo{n}}_1} + 2\delta \cos\lr{\bo{k}\cdot\hat{\bo{n}}_2}
-    } \\
-    & \qquad
-        + 
-\end{align*}
+    \delta \sin(\bo{k}\cdot\hat{\bo{n}}_1)
+    +
+    \delta \sin(\bo{k}\cdot\hat{\bo{n}}_2)
+    }^2 \nonumber \\
+    &\equiv \lr{1 + \delta u}^2 + \delta^2v^2
+\end{align}
+\begin{equation}
+    \frac{R_k}{2J_z}
+    =
+    1 
+    +
+    \delta \cos\lr{\bo{k}\cdot \hat{\bo{n}}_1} 
+    + 
+    \delta \cos\lr{\bo{k}\cdot\hat{\bo{n}}_2}
+    \equiv
+    1 + \delta u
+\end{equation}
 
 \[
 \delta
@@ -347,6 +374,94 @@ In the toric code limit, the dominant correlation functions are those of nearest
 \frac{\alpha}{3}
 +
 \frac{2\alpha^2}{9}
+\]
+
+
+\begin{align*}
+    \anglelr{-ic_{\bo{x}A}c_{\bo{x}B}} 
+    &=
+    \frac{1}{N/2}
+    \sum_{\bo{k}}
+    \frac{R_{\bo{k}}}{\epsilon(\bo{k})} 
+    =
+    \frac{1}{N/2}
+    \sum_{\bo{k}}
+    \frac{R_{\bo{k}}}{\abs{s_k}} \\
+    &=
+    \frac{1}{N/2}
+    \sum_{\bo{k}}
+    \frac{1 + \delta u}
+    {\sqrt{
+    \lr{1+\delta u}^2 + \delta^2 v^2
+    }} \\
+    &=
+    \frac{1}{N/2}
+    \sum_{k} 
+    \lrm{
+    1 + 
+    \lr{
+        \frac{\delta v}{1 + \delta u}
+    }^2
+    }^{-1/2} \\
+    &\approx
+    \frac{1}{N/2}
+    \sum_{k} 
+    \lrm{
+    1 - 
+    \frac{1}{2}\delta^2 
+    \lr{
+    \sin\lr{\bo{k}\cdot\hat{\bo{n}}_1} + 
+    \sin\lr{\bo{k}\cdot\hat{\bo{n}}_2}
+    }^2
+    } \\
+    &=
+    1 -
+    \frac{1}{2}\delta^2
+    +
+    \mathcal{O}(\delta^3)
+\end{align*}
+
+\begin{equation}
+    \anglelr{-ic_{\bo{x}A}c_{\bo{x}B}} 
+    \approx
+    1 - \frac{\alpha^2}{18} + \mathcal{O}(\alpha^3)
+\end{equation}
+
+\[
+\det\mathsf{C}_{\mathfrak{D}}
+\approx
+\lr{1 - \frac{\alpha^2}{18}}^{2N_d^\mathfrak{D}}
+\]
+
+\begin{align*}
+    \sum_{[\mathfrak{D}]\subset A} \mathfrak{C}_\mathfrak{D}^4
+    &=
+    \sum_{[\mathfrak{D}]\subset A} \lrm{\det(\mathsf{C}_\mathfrak{D})}^2
+    \approx
+    \sum_{n=0}^{N_d^A} 
+    \lr{1 - \frac{\alpha^2}{18}}^{4n} \\
+    &=
+    \frac{\lr{1 - \frac{\alpha^2}{18}}^{4\lr{N_d^A + 1}} - 1}
+    {\lr{1 - \frac{\alpha^2}{18}}^{4} - 1} \\
+    &\approx
+    \frac{
+    4\lr{N^A_d + 1} - \binom{4\lr{N^A_d + 1}}{2}\frac{\alpha^2}{18}
+    }{
+    4 - \binom{4}{2}\frac{\alpha^2}{18}
+    }
+\end{align*}
+
+\[
+    -\ln\lr{
+    \sum_{[\mathfrak{D}]\subset A} \mathfrak{C}_\mathfrak{D}^4
+    }
+    -
+    \ln{
+    \det\lr{
+    \mathds{1} + \mathsf{C}_A
+    }
+    }
+    .
 \]
 
 \subsection{Two-Points Correlation Functions in a Finite-Size System}
