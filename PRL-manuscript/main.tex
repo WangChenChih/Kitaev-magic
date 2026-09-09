@@ -1,0 +1,186 @@
+% ****** Start of file apssamp.tex ******
+%
+%   This file is part of the APS files in the REVTeX 4.2 distribution.
+%   Version 4.2a of REVTeX, December 2014
+%
+%   Copyright (c) 2014 The American Physical Society.
+%
+%   See the REVTeX 4 README file for restrictions and more information.
+%
+% TeX'ing this file requires that you have AMS-LaTeX 2.0 installed
+% as well as the rest of the prerequisites for REVTeX 4.2
+%
+% See the REVTeX 4 README file
+% It also requires running BibTeX. The commands are as follows:
+%
+%  1)  latex apssamp.tex
+%  2)  bibtex apssamp
+%  3)  latex apssamp.tex
+%  4)  latex apssamp.tex
+%
+\documentclass[
+reprint,
+superscriptaddress,
+%groupedaddress,
+%unsortedaddress,
+%runinaddress,
+%frontmatterverbose, 
+%preprint,
+%preprintnumbers,
+%nofootinbib,
+%nobibnotes,
+%bibnotes,
+amsmath,amssymb,
+aps,
+%pra,
+%prb,
+prl,
+%rmp,
+%prstab,
+%prstper,
+floatfix,
+]{revtex4-2}
+
+\usepackage{graphicx}% Include figure files
+\usepackage{dcolumn}% Align table columns on decimal point
+\usepackage{bm}% bold math
+\usepackage{physics}
+\usepackage{mathrsfs}
+\usepackage[colorlinks,linkcolor=blue,anchorcolor=blue,citecolor=blue,breaklinks=true]{hyperref}
+\usepackage[ruled,vlined,]{algorithm2e} 
+\usepackage[normalem]{ulem} % [normalem] keeps \emph as italics
+\usepackage{orcidlink}
+
+\DontPrintSemicolon
+
+\usepackage{amsfonts,amssymb}
+\usepackage{textcomp}
+\usepackage{float}
+\usepackage{color}
+\usepackage{tikz}
+\usepackage{amsthm}
+\usepackage{mathtools}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks = true,
+    %linkcolor = [rgb]{0.25, 0.41, 0.88},
+    %citecolor = [rgb]{0.25, 0.41, 0.88},
+    urlcolor = blue
+}
+\urlstyle{same}
+%\usepackage{caption}
+%\usepackage{subcaption}
+\usepackage{dsfont}
+\usepackage{comment}
+\newtheorem{theorem}{Theorem}[section]
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}{Corollary}[theorem]
+\newtheorem{proposition}[theorem]{Proposition}
+\renewcommand{\qedsymbol}{$\blacksquare$}
+
+
+%\usepackage{cancel}
+
+%\numberwithin{equation}{section}
+
+\newcommand{\vac}{\mrm{vac}}
+\newcommand{\sbra}[1]{\langle #1 |}
+\newcommand{\sket}[1]{| #1 \rangle}
+\newcommand{\anglelr}[1]{\left\langle #1 \right\rangle}
+\newcommand{\sanglelr}[1]{\langle #1 \rangle}
+\newcommand{\sbraket}[2]{\sanglelr{ #1 | #2 }}
+\newcommand{\dif}[1]{\frac{\mathrm{d}}{\mathrm{d}#1}}
+\newcommand{\diff}[2]{\frac{\mathrm{d}#1}{\mathrm{d}#2}}
+\newcommand{\gd}{\boldsymbol{\nabla}}
+\newcommand{\dive}{\boldsymbol{\nabla}\cdot}
+\newcommand{\lr}[1]{\left(  #1  \right)}
+\newcommand{\lrm}[1]{\left[  #1  \right]}
+\newcommand{\lrg}[1]{\left\{  #1  \right\}}
+\newcommand{\de}{\partial}
+\newcommand{\pdif}[1]{\frac{\partial}{\partial#1}}
+\newcommand{\pdiff}[2]{\frac{\partial#1}{\partial#2}}
+\newcommand{\mrm}[1]{\mathrm{#1}}
+\newcommand{\bo}[1]{\mathbf{#1}}
+\newcommand{\bog}[1]{\boldsymbol{#1}}
+\newcommand{\vint}[3]{\int_{#1}#2\cdot\mathrm{d}\mathbf{#3}}
+\newcommand{\voint}[3]{\oint_{#1}#2\cdot\mathrm{d}\mathbf{#3}}
+\newcommand{\Vint}{\int\mrm{d}^3\bo{r}'}
+\newcommand{\rr}{\mathbf{r} - \mathbf{r}'}
+\newcommand{\arr}{\left|\mathbf{r} - \mathbf{r}'\right|}
+\newcommand{\nx}{\hat{\bo{n}}_1}
+\newcommand{\ny}{\hat{\bo{n}}_2}
+\newcommand{\alert}[1]{{\color{red}#1}}
+\newcommand{\valert}[1]{{\color{violet}#1}}
+\newcommand{\alertV}[1]{{\color{violet}#1}}
+\newcommand{\dimer}[2]{\sigma^{\alpha_{#1 #2}}_{#1}\sigma^{\alpha_{#1 #2}}_{#2}}
+
+\newcommand{\dodecagon}{{\wordfig{0.25}{figures/dodecagon.pdf}}}
+
+\newcommand{\wordfig}[2]{\begin{minipage}[h]{#1 cm}
+	\vspace{0pt}
+	\includegraphics[width=\textwidth]{#2}
+   \end{minipage}}
+
+\newcommand{\segment}[2]{\mathcal{S}_{\overrightarrow{#1#2}}}
+\newcommand{\lsegment}[2]{\mathcal{S}_{\overleftarrow{#1#2}}}
+    
+\newcommand{\TReven}{\bo{\mathsf{Ev}}}
+\newcommand{\TRodd}{\bo{\mathsf{Od}}}
+\newcommand{\Good}{\bo{\mathsf{Gd}}}
+
+\begin{document}
+
+\preprint{APS/123-QED}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%% title %%%%%%%%%%%%%%%%%%%%%%%%%%
+\title{Quantum Magic in the Kitaev Spin Liquid from the Organization of the Density Matrix}
+
+\author{Chen-Chih Wang, 
+\orcidlink{0009-0006-6656-8071}}
+\affiliation{Physics Department, National Tsing Hua University, Hsinchu 30013, Taiwan}
+
+\author{Yi-Ping Huang, \orcidlink{0000-0001-6453-1191}}
+\email[Correspondence email address: ]{yphuang@phys.nthu.edu.tw} 
+\affiliation{Physics Department, National Tsing Hua University, Hsinchu 30013, Taiwan}
+\affiliation{Physics Division, National Center for Theoretical Sciences, Taipei 10617, Taiwan}
+\affiliation{Institute of Physics, Academia Sinica, Taipei 115, Taiwan}
+
+\author{Sungkit Yip, \orcidlink{0000-0002-3542-5186}}
+\email[Correspondence email address: ]{yip@phys.sinica.edu.tw} 
+\affiliation{Institute of Physics, Academia Sinica, Taipei 115, Taiwan}
+\affiliation{Institute of Atomic and Molecular Sciences, Academia Sinica, Taipei 10617, Taiwan}
+
+
+\date{\today}
+
+\begin{abstract}
+    
+\end{abstract}
+
+                              %display desired
+%%%%%%%%%%%%%%%%%%%%%%%%%% title %%%%%%%%%%%%%%%%%%%%%%%%%%
+\maketitle
+
+%%%%%%%%%%%%%%%%%%%%%%%%% main text %%%%%%%%%%%%%%%%%%%%%%%%%
+
+\input{content}
+
+%%%%%%%%%%%%%%%%%%%%%%%%% main text %%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%% bibliography %%%%%%%%%%%%%%%%%%%%%%%%
+% The \nocite command causes all entries in a bibliography to be printed out
+% whether or not they are actually referenced in the text. This is appropriate
+% for the sample file to show the different styles of references, but authors
+% most likely will not want to use it.
+% \nocite{*}
+
+% \bibliography{ref}% Produces the bibliography via BibTeX.
+% \bibliographystyle{my_apsrev4-2}
+%%%%%%%%%%%%%%%%%%%%%%%% bibliography %%%%%%%%%%%%%%%%%%%%%%%%
+
+\end{document} 
+
+
+
