@@ -25,8 +25,8 @@ class SpinSystem:
         
         The phyical constituents of the model are spin-1/2 local spins. The lattice is of honeycomb geometry.
         '''
-        if width%2 != 0 or height%2 != 0:
-            raise ValueError('Both width and height are required to be even to ensure a valid PBC')
+        # if width%2 != 0 or height%2 != 0:
+        #     raise ValueError('Both width and height are required to be even to ensure a valid PBC')
         
         self.width = int(width)
         self.height = int(height)
@@ -291,11 +291,16 @@ class SpinSystem:
                 pair_type = 'BA'
             return self.corr_engine_c(dx=dx, dy=dy, pair_type=pair_type, tot_size=tot_size)
     
-    def calculate_CorrTable(self, tot_size:list[int,int]=None):
+    def calculate_CorrTable(self, tot_size:list[int,int]=None,
+                            corr_table_sys_size:list[int,int]=None):
         """
         A dictionary with two-point correlation functions stored within it
         """
         print('\033[34mCreating CorrTable\033[0m')
+
+        if not corr_table_sys_size is None:
+            width_origin, height_origin = self.width, self.height
+            self.width, self.height = corr_table_sys_size[0], corr_table_sys_size[1]
 
         def corr_func(dx, dy, pair_type):
             # if the variable self.thermo_limit is True, then tot_size won't be taken, no matter we set it or not.
@@ -328,9 +333,14 @@ class SpinSystem:
         with open(self.datapath  + '/' + filename, "w") as file:
             json.dump(CorrTable, file)  
         print('\033[34mCorrTable creation complete\033[0m')
+
+        if not corr_table_sys_size is None:
+            self.width, self.height = width_origin, height_origin
+
         return  CorrTable
     
-    def corr(self, n1:int, n2:int, update:bool=False, tot_size:list[int,int]=None)->float:
+    def corr(self, n1:int, n2:int, update:bool=False, tot_size:list[int,int]=None,
+             corr_table_sys_size:list[int,int]=None)->float:
         """
         Two-points correlation function <-icc>. Notice the existance of the imaginary number -i
         This function is valid only for PBC
@@ -343,12 +353,17 @@ class SpinSystem:
             else:
                 filename = f'CorrTable_totsize_{tot_size[0]}_{tot_size[1]}.json'
 
+        if not corr_table_sys_size is None:
+            width_origin, height_origin = self.width, self.height
+            self.width, self.height = corr_table_sys_size[0], corr_table_sys_size[1]
+
         if update or not os.path.isfile(self.datapath+'/'+filename):
-            self.calculate_CorrTable(tot_size=tot_size)
+            self.calculate_CorrTable(tot_size=tot_size, 
+                                     corr_table_sys_size=corr_table_sys_size)
             if self.thermo_limit:
-                return self.corr_thermo_limit_engine(n1=n1, n2=n2)
+                corr_value = self.corr_thermo_limit_engine(n1=n1, n2=n2)
             else:
-                return self.corr_engine(n1=n1, n2=n2)
+                corr_value = self.corr_engine(n1=n1, n2=n2)
         else:
             with open(self.datapath + '/' + filename, "r") as file:
                 CorrTable = json.load(file)
@@ -358,15 +373,21 @@ class SpinSystem:
             dx, dy = x2 - x1, y2 - y1 
 
             if mu1==1 and mu2==0:   # AB pairing
-                return CorrTable['(%d,%d)AB'%(dx,dy)]
+                corr_value = CorrTable['(%d,%d)AB'%(dx,dy)]
             elif mu1==0 and mu2==1:   # BA pairing
-                return CorrTable['(%d,%d)BA'%(dx,dy)]
+                corr_value = CorrTable['(%d,%d)BA'%(dx,dy)]
             elif mu1==1 and mu2==1:   # AA pairing
-                return CorrTable['(%d,%d)AA'%(dx,dy)]
+                corr_value = CorrTable['(%d,%d)AA'%(dx,dy)]
             else:                      # BB pairing
-                return CorrTable['(%d,%d)BB'%(dx,dy)]
+                corr_value = CorrTable['(%d,%d)BB'%(dx,dy)]
+
+        if not corr_table_sys_size is None:
+            self.width, self.height = width_origin, height_origin
+
+        return corr_value
     
-    def full_corr_mat_update(self, tot_size:list[int,int]=None, update:bool=False):
+    def full_corr_mat_update(self, tot_size:list[int,int]=None, update:bool=False,
+                             corr_table_sys_size:list[int,int]=None):
         '''
         C_{ij} =    0           ;   i = j
                 =    <-ic_ic_j>  ;   i neq j
@@ -383,7 +404,8 @@ class SpinSystem:
                     corr_mat[i,i] = 0
                 else:
                     # NOTE: if self.thermo_limit is True, the tot_size won't be taken
-                    corr_mat[i,j] = self.corr(n1=i, n2=j, tot_size=tot_size, update=update)
+                    corr_mat[i,j] = self.corr(n1=i, n2=j, tot_size=tot_size, update=update,
+                                              corr_table_sys_size=corr_table_sys_size)
                     corr_mat[j,i] = - corr_mat[i,j]
 
                 # progress report
@@ -396,7 +418,8 @@ class SpinSystem:
         self.full_corr_mat = corr_mat
         return None
 
-    def Coefficient_engine(self, label:int, tot_size:list[int,int]=None)->list[int, float]:
+    def Coefficient_engine(self, label:int, tot_size:list[int,int]=None,
+                           corr_table_sys_size:list[int,int]=None)->list[int, float]:
         '''
         Return: (number of TRodd, pfaffian of the correlation matrix)
         Note that (i)^{number of TRodd} = phase factor
@@ -415,7 +438,7 @@ class SpinSystem:
             raise ValueError('There are supposed to be an even number of endpoints in total.')
 
         if self.full_corr_mat is None:  # create the correlation matrix if it has not had one
-            self.full_corr_mat_update(tot_size=tot_size)
+            self.full_corr_mat_update(tot_size=tot_size, corr_table_sys_size=corr_table_sys_size)
 
         cor_pfa = corr_pfaffian_calculator(mat=self.full_corr_mat, endpointset=endpointset)
         
@@ -423,7 +446,8 @@ class SpinSystem:
 
         return [num_trodd_strings, cor_pfa]
 
-    def calculate_CoefficientTable(self, update:bool=False, tot_size:list[int,int]=None)->dict:
+    def calculate_CoefficientTable(self, update:bool=False, tot_size:list[int,int]=None,
+                                   corr_table_sys_size:list[int,int]=None)->dict:
         """
         NOTE: If the region is exactly the entire system with PBC, please do not set the variable ``tot_size``, because we can take advantage of the PBC to reduce computational cost.
         
@@ -461,7 +485,7 @@ class SpinSystem:
                         reps_count += 1
                         continue
 
-                    CoeTableDict[D] = self.Coefficient_engine(label=D)
+                    CoeTableDict[D] = self.Coefficient_engine(label=D, corr_table_sys_size=corr_table_sys_size)
 
                     # configurations differ by a translation 
                     for move_x in range(int(self.width/2)):
@@ -486,7 +510,7 @@ class SpinSystem:
                     if len(setA + setB)%2 == 1: # the number of endpoints must be even.
                         count += 1
                         continue
-                    CoeTableDict[D] = self.Coefficient_engine(label=D)
+                    CoeTableDict[D] = self.Coefficient_engine(label=D, corr_table_sys_size=corr_table_sys_size)
                     # progress report
                     count += 1
                     if int(10 * count / self.dim) >= progress:
@@ -1503,7 +1527,10 @@ class SpinSystem:
         else:
             return (1-n)**(-1) * np.log( np.sum(coe_array**(2*n)) / 2**(self.N/2) )
 
-    def RDM_2_stab_renyi_entropy(self, tot_size:list[int, int]=None, thermo_limit:bool=False, update=False):
+    def RDM_2_stab_renyi_entropy(self, tot_size:list[int, int]=None, 
+                                 thermo_limit:bool=False, 
+                                 update=False,
+                                 corr_table_sys_size:list[int,int]=None):
         '''
         ``tot_size`` = [the width of the entire system, the height of ..]
         If ``thermo_limit`` is true, the total system size is set to be infinite, and the correlation function is generated by the integration function.
@@ -1515,7 +1542,8 @@ class SpinSystem:
             raise KeyError('Please set the variable ``tot_size`` or make ``thermo_limit`` true. Otherwise, please use the function stab_renyi_entropy for calculating the pure state SRE.')
         
         self.full_corr_mat_update(tot_size=tot_size)
-        coe_info = np.array(list(self.calculate_CoefficientTable(update=update, tot_size=tot_size).values()))
+        coe_info = np.array(list(self.calculate_CoefficientTable(update=update, tot_size=tot_size,
+                                                                 corr_table_sys_size=corr_table_sys_size).values()))
         coe_array = coe_info[:,1]
         denominator = la.det(np.eye(self.N) + self.full_corr_mat)
         enumerator = np.sum(coe_array**4)
