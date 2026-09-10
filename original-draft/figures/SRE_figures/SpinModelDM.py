@@ -1541,11 +1541,13 @@ class SpinSystem:
         if tot_size is None and thermo_limit==False:
             raise KeyError('Please set the variable ``tot_size`` or make ``thermo_limit`` true. Otherwise, please use the function stab_renyi_entropy for calculating the pure state SRE.')
         
-        self.full_corr_mat_update(tot_size=tot_size)
+        # self.full_corr_mat_update(tot_size=tot_size)
         coe_info = np.array(list(self.calculate_CoefficientTable(update=update, tot_size=tot_size,
                                                                  corr_table_sys_size=corr_table_sys_size).values()))
         coe_array = coe_info[:,1]
-        denominator = la.det(np.eye(self.N) + self.full_corr_mat)
+        # print(coe_array)
+        # denominator = la.det(np.eye(self.N) + self.full_corr_mat)
+        denominator = np.sum(coe_array**2)
         enumerator = np.sum(coe_array**4)
         
         return -np.log(enumerator / denominator)
