@@ -18,20 +18,23 @@ class SpinSystem:
     def __init__(self, 
                  width:int=4, height:int=4, 
                  Jz:float=1, Jx:float=1, Jy:float=1,
-                 h:float=0, thermo_limit:bool=False):
+                 h:float=0, thermo_limit:bool=False,
+                 ini_lat_type:str='B'):
         '''
         width and height of the chosen geometric region. The shape of the region is restricted 
         to be rectangular. 
         
         The phyical constituents of the model are spin-1/2 local spins. The lattice is of honeycomb geometry.
+        
+        ``starting_point`` is the sublattice type of the lattice site sitting at the lower-left corner (labeled as 0)
         '''
         # if width%2 != 0 or height%2 != 0:
         #     raise ValueError('Both width and height are required to be even to ensure a valid PBC')
         
-        self.width = int(width)
-        self.height = int(height)
+        self._width = int(width)
+        self._height = int(height)
         self.N = int(width*height) # total number of sites
-        self.dim = int(2**(width*height)) # 2^N, the dimenIon of the total Hilbert space
+        self._dim = int(2**(width*height)) # 2^N, the dimenIon of the total Hilbert space
 
         self._too_large = False
         if self.N > 7145:
@@ -41,6 +44,11 @@ class SpinSystem:
             self.num_total_config = int(comb(self.N, int(self.N/2)))
         else:
             self.num_total_config = None
+
+        if ini_lat_type in ['A', 'B']:
+            self._ini_lat_type = ini_lat_type
+        else:
+            raise ValueError("``ini_lat_type`` must be 'A' or 'B'")
         
         self._Jx = Jx
         self._Jy = Jy
@@ -126,11 +134,57 @@ class SpinSystem:
         self._CoeTable = None
         self.approx_bound = None
         return
+
+    @property 
+    def ini_lat_type(self):
+        return self._ini_lat_type
+    @ini_lat_type.setter
+    def ini_lat_type(self, ini_lat_type:int):
+        if not ini_lat_type in ['A', 'B']:
+            raise ValueError("``ini_lat_type`` must be 'A' or 'B'")
+        self._ini_lat_type = ini_lat_type
+        self.full_corr_mat = None
+        self._CoeTable_loaded = False   # reload the CoeTable if the parameter is changed
+        self._CoeTable = None
+        self.approx_bound = None
+        return
     
     @property
     def datapath(self):
-        file_path = "data/w_%d_h_%d/Jx_%.3f_Jy_%.3f_Jz_%.3f_mag_%.3f" % (self.width, self.height, self.Jx, self.Jy, self.Jz, self.h)
+        if self.ini_lat_type == 'B':   # the lower-left corner is type-B
+            file_path = "data/w_%d_h_%d/Jx_%.3f_Jy_%.3f_Jz_%.3f_mag_%.3f" % (self.width, self.height, self.Jx, self.Jy, self.Jz, self.h)
+        else:
+            file_path = "data_init_is_A/w_%d_h_%d/Jx_%.3f_Jy_%.3f_Jz_%.3f_mag_%.3f" % (self.width, self.height, self.Jx, self.Jy, self.Jz, self.h)
         return file_path
+    
+    @property
+    def width(self):
+        return self._width
+    @width.setter
+    def width(self, width:int):
+        self._width = width
+        self.N = int(self._width * self._height)
+        self.full_corr_mat = None
+        self._CoeTable_loaded = False
+        self._CoeTable = None
+        return
+
+    @property
+    def height(self):
+        return self._height
+    @height.setter
+    def height(self, height:int):
+        self._height = height
+        self.N = int(self._width * self._height)
+        self.full_corr_mat = None
+        self._CoeTable_loaded = False
+        self._CoeTable = None
+        return
+
+    @property
+    def dim(self):
+        self._dim = int(2**(self.width * self.height))
+        return self._dim
 
     @property
     def CoeTable_loaded(self):  # load CoeTable once it is called
@@ -184,31 +238,28 @@ class SpinSystem:
                          np.sin(2*np.pi*(k1-k2)) +
                          np.sin(2*np.pi*k1))
     
-    def ep(self, k1:float, k2:float)->float:
-        return np.sqrt((self.sk(k1=k1, k2=k2))**2 + (self.Delta(k1=k1, k2=k2))**2)
+    def ep(self, k1:float, k2:float, eta:float=1e-3)->float:
+        return np.sqrt((self.sk(k1=k1, k2=k2))**2 + (self.Delta(k1=k1, k2=k2))**2 + eta**2)
     
     def corr_integrand(self, k1:int, k2:int, dx:int, dy:int, pair_type:str)->float:
         """
         ``pair_type`` = 'AA', 'BB', 'AB', 'BA'
         """
         R, I, epsilon, Delta = self.Rk(k1=k1, k2=k2), self.Ik(k1=k1, k2=k2), self.ep(k1=k1, k2=k2), self.Delta(k1=k1, k2=k2)
-        if epsilon == 0:  # avoid being divided by zero
-            integrand = 0
+        if pair_type == 'AA':
+            phase = 2*np.pi*(k1*dx + k2*dy)
+            integrand = - Delta * np.sin(phase) / epsilon
+        elif pair_type == 'BB':
+            phase = 2*np.pi*(k1*dx + k2*dy)
+            integrand = Delta * np.sin(phase) / epsilon
+        elif pair_type == 'AB':
+            phase = 2*np.pi*(k1*dx + k2*dy)
+            integrand = (R*np.cos(phase) + I*np.sin(phase)) / epsilon
+        elif pair_type == 'BA':
+            phase = - 2*np.pi*(k1*dx + k2*dy)   # the relative position is also flipped after exchanging the position of the two majorana fermion operators
+            integrand = - (R*np.cos(phase) + I*np.sin(phase)) / epsilon
         else:
-            if pair_type == 'AA':
-                phase = 2*np.pi*(k1*dx + k2*dy)
-                integrand = - Delta * np.sin(phase) / epsilon
-            elif pair_type == 'BB':
-                phase = 2*np.pi*(k1*dx + k2*dy)
-                integrand = Delta * np.sin(phase) / epsilon
-            elif pair_type == 'AB':
-                phase = 2*np.pi*(k1*dx + k2*dy)
-                integrand = (R*np.cos(phase) + I*np.sin(phase)) / epsilon
-            elif pair_type == 'BA':
-                phase = - 2*np.pi*(k1*dx + k2*dy)   # the relative position is also flipped after exchanging the position of the two majorana fermion operators
-                integrand = - (R*np.cos(phase) + I*np.sin(phase)) / epsilon
-            else:
-                raise ValueError("``pair_type`` must be 'AA', 'BB', 'AB', or 'BA'.")
+            raise ValueError("``pair_type`` must be 'AA', 'BB', 'AB', or 'BA'.")
         return integrand
 
     def corr_thermo_limit_engine_c(self, dx:int, dy:int, pair_type:bool)->float:
@@ -252,20 +303,37 @@ class SpinSystem:
         Two-points correlation function <-ic_{n1}c_{n2}>. Notice the existance of the imaginary number -i
         ``tot_size`` = [width, height] is the total system size. Note that the total system size need not to be identical to the system size we set in the beginning since the system size may be merely a subsystem. 
         The default value of ``tot_size`` is [self.width, self.height] we set in the beginning.
+        Notice that the value of ``tot_size[1]`` (height) can be 'infty', which means the entire system is a infinitly long cylinder streching along z-direction.
         """
-        if tot_size is None:    # default: the total size is exactly the system size we set in the beginning
+        if tot_size is None:    # default: the total size is exactly the system size we set in the beginning with PBC
             tot_size = [self.width, self.height]
-        tot_num = tot_size[0] * tot_size[1]
+            tot_num = tot_size[0] * tot_size[1]
+        else:
+            if tot_size[1] == 'infty':  # infinitly long cylinder streching along z-direction.
+                tot_num = tot_size[0]
+            else:
+                tot_num = tot_size[0] * tot_size[1]
 
-        corr_fun = 0
-        for nx in range(int(tot_size[0]/2)):
-            for ny in range(tot_size[1]):
+        if tot_size[1] == 'infty':
+            corr_fun = 0
+            for nx in range(int(tot_size[0]/2)):
                 k1 = nx / (tot_size[0]/2)
-                k2 = ny / tot_size[1]
                 # R, I, epsilon, Delta = self.Rk(k1=k1, k2=k2), self.Ik(k1=k1, k2=k2), self.ep(k1=k1, k2=k2), self.Delta(k1=k1, k2=k2)
-                corr_fun += self.corr_integrand(k1=k1, k2=k2, 
-                                                dx=dx, dy=dy,
-                                                pair_type=pair_type)
+                int_func = lambda k: self.corr_integrand(k1=k1, k2=k, 
+                                                            dx=dx, dy=dy,
+                                                            pair_type=pair_type)
+                val, err = integrate.quad(int_func, 0, 1)
+                corr_fun += val
+        else:
+            corr_fun = 0
+            for nx in range(int(tot_size[0]/2)):
+                for ny in range(tot_size[1]):
+                    k1 = nx / (tot_size[0]/2)
+                    k2 = ny / tot_size[1]
+                    # R, I, epsilon, Delta = self.Rk(k1=k1, k2=k2), self.Ik(k1=k1, k2=k2), self.ep(k1=k1, k2=k2), self.Delta(k1=k1, k2=k2)
+                    corr_fun += self.corr_integrand(k1=k1, k2=k2, 
+                                                    dx=dx, dy=dy,
+                                                    pair_type=pair_type)
         return (2/tot_num) * corr_fun
 
     def corr_engine(self, n1:int, n2:int, tot_size:list[int,int]=None)->float:
@@ -328,7 +396,10 @@ class SpinSystem:
             if tot_size is None:    # default
                 filename = 'CorrTable.json'
             else:
-                filename = f'CorrTable_totsize_{tot_size[0]}_{tot_size[1]}.json'
+                if tot_size[1] == 'infty':
+                    filename = f'CorrTable_totsize_{tot_size[0]}_infty.json'
+                else:
+                    filename = f'CorrTable_totsize_{tot_size[0]}_{tot_size[1]}.json'
         os.makedirs(name=self.datapath, exist_ok=True)
         with open(self.datapath  + '/' + filename, "w") as file:
             json.dump(CorrTable, file)  
@@ -351,9 +422,12 @@ class SpinSystem:
             if tot_size is None:    # default
                 filename = 'CorrTable.json'
             else:
-                filename = f'CorrTable_totsize_{tot_size[0]}_{tot_size[1]}.json'
+                if tot_size[1] == 'infty':
+                    filename = f'CorrTable_totsize_{tot_size[0]}_infty.json'
+                else:
+                    filename = f'CorrTable_totsize_{tot_size[0]}_{tot_size[1]}.json'
 
-        if not corr_table_sys_size is None:
+        if not corr_table_sys_size is None: # temporary reset the lattice size
             width_origin, height_origin = self.width, self.height
             self.width, self.height = corr_table_sys_size[0], corr_table_sys_size[1]
 
@@ -381,7 +455,7 @@ class SpinSystem:
             else:                      # BB pairing
                 corr_value = CorrTable['(%d,%d)BB'%(dx,dy)]
 
-        if not corr_table_sys_size is None:
+        if not corr_table_sys_size is None: # restore the system size
             self.width, self.height = width_origin, height_origin
 
         return corr_value
@@ -398,13 +472,17 @@ class SpinSystem:
         progress = 1
         count = 0
         print('\033[34mProgress: Making Correlation Matrix\033[0m')
+        if update:
+            self.calculate_CorrTable(tot_size=tot_size, 
+                                     corr_table_sys_size=corr_table_sys_size)
         for i in np.arange(self.N):
             for j in np.arange(i, self.N):
                 if i == j:
                     corr_mat[i,i] = 0
                 else:
                     # NOTE: if self.thermo_limit is True, the tot_size won't be taken
-                    corr_mat[i,j] = self.corr(n1=i, n2=j, tot_size=tot_size, update=update,
+                    corr_mat[i,j] = self.corr(n1=i, n2=j, 
+                                              tot_size=tot_size,
                                               corr_table_sys_size=corr_table_sys_size)
                     corr_mat[j,i] = - corr_mat[i,j]
 
@@ -469,7 +547,10 @@ class SpinSystem:
             if tot_size is None:
                 filename = 'CoeTable.json'
             else:
-                filename = f'CoeTable_totsize_{tot_size[0]}_{tot_size[1]}.json'
+                if tot_size[1] == 'infty':
+                    filename = f'CoeTable_totsize_{tot_size[0]}_infty.json'
+                else:
+                    filename = f'CoeTable_totsize_{tot_size[0]}_{tot_size[1]}.json'
 
         if not os.path.isfile(path + '/' + filename) or update:
             print('\033[34mCreating coefficient table for Jx=%.3f, Jy=%.3f, Jz=%.3f, mag=%.3f\033[0m' % (self.Jx, self.Jy, self.Jz, self.h))
@@ -547,7 +628,10 @@ class SpinSystem:
             if tot_size is None:
                 filename = 'CoeTable.json'
             else:
-                filename = f'CoeTable_totsize_{tot_size[0]}_{tot_size[1]}.json'
+                if tot_size[1] == 'infty':
+                    filename = f'CoeTable_totsize_{tot_size[0]}_infty.json'
+                else:
+                    filename = f'CoeTable_totsize_{tot_size[0]}_{tot_size[1]}.json'
 
         if not os.path.isfile(self.datapath + '/' + filename):    # Create CoeTable first if it doesn't exists in the disk
             self.calculate_CoefficientTable()
@@ -602,7 +686,10 @@ class SpinSystem:
         \mu = 0 stands for B-sublattice 
             = 1 stands for A-sublattice
         '''
-        mu = label % 2
+        if self.ini_lat_type == 'B':
+            mu = label % 2
+        else:
+            mu = (label+1) % 2 
 
         layer, site = self.dictionary_n_to_l(label=label)
         
@@ -610,8 +697,12 @@ class SpinSystem:
         sr = site % 2
         sq = int(site/2)
 
-        m1 = sq + sr    # x = sq + sr
-        m2 = layer - sr # y = l - sr
+        if self.ini_lat_type == 'B':
+            m1 = sq + sr    # x = sq + sr
+            m2 = layer - sr # y = l - sr
+        else:
+            m1 = sq
+            m2 = layer + sr 
 
         return m1, m2, mu
     
@@ -1552,7 +1643,57 @@ class SpinSystem:
         
         return -np.log(enumerator / denominator)
 
-            
+    def mutial_SRE_1D_region(self, L:int, l:int, update:bool=False)->float:
+        if L%2==1:
+            raise ValueError('L, the length along the xy-direction, must be even to agree with the periodic boundary condition')
+        if L < 4:
+            raise ValueError('L is too small. It must be larger than 4')
+        
+        self.width, self.height = l, 1
+        SRE_l = self.RDM_2_stab_renyi_entropy(tot_size=[L, 'infty'], 
+                                              corr_table_sys_size=[L, 1],
+                                              update=update)
+        if l%2 == 1:
+            self.ini_lat_type = 'A'
+        self.width, self.height = L-l, 1
+        SRE_env = self.RDM_2_stab_renyi_entropy(tot_size=[L, 'infty'], 
+                                                corr_table_sys_size=[L, 1],
+                                                update=update)
+        if l%2 == 1:    # restore the setting
+            self.ini_lat_type = 'B'    
+        self.width, self.height = L, 1
+        SRE_loop = self.RDM_2_stab_renyi_entropy(tot_size=[L, 'infty'], 
+                                                corr_table_sys_size=[L, 1],
+                                                update=update)
+        print(f'SRE_l={SRE_l}, SRE_env={SRE_env}, SRE_loop={SRE_loop}')
+        return SRE_l + SRE_env - SRE_loop
+
+    def renyi_entropy_lin_region(self, tot_size:list[int,int]=None, thermo_limit:bool=False, 
+                                corr_table_sys_size:list[int,int]=None, update:bool=False):
+        self.thermo_limit = thermo_limit    # note that if termo_limit is true, then the tot_size won't be taken.
+        if self.height != 1:
+            raise ValueError('This function only calculates the entropy of linear regions that the height must be 1')
+        if tot_size is None and thermo_limit==False:
+            raise KeyError('Please set the variable ``tot_size`` or make ``thermo_limit`` true. Otherwise, please use the function stab_renyi_entropy for calculating the pure state SRE.')
+        
+        self.full_corr_mat_update(tot_size=tot_size, 
+                                  corr_table_sys_size=corr_table_sys_size, 
+                                  update=update)
+        entropy = -np.log(la.det(np.eye(self.N) + self.full_corr_mat) / (2**(self.N / 2)))
+        # intrinsic_entropy = (tot_size[0]/2 + 1 - (tot_size[0]/2)%2) * np.log(2)
+        entropy = entropy # - intrinsic_entropy
+
+        # coe_info = np.array(list(self.calculate_CoefficientTable(update=update, tot_size=tot_size,
+        #                                                                  corr_table_sys_size=corr_table_sys_size).values()))
+        # coe_array = coe_info[:,1]
+        # entropy = -np.log(np.sum(coe_array**2) / (2**self.N))
+
+        # corr_mat_spec = la.eigvals(self.full_corr_mat)
+        # print(corr_mat_spec)
+        # print(np.eye(self.N) + self.full_corr_mat)
+        print(f'L={self.width}, Renyi entropy={entropy}')
+        
+        return entropy
 
 ################################## extra functions ##################################
 
