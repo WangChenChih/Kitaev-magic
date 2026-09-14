@@ -22,6 +22,403 @@ According to the two requirements, \textbf{the smallest possible topologically n
     \label{fig:lattice}
 \end{figure}
 
+\section{1D Kitaev Model}
+Jordan-Wigner Transform
+\[
+\sigma^z_i = i\bar{c}_i c_i
+,\quad
+\sigma^x_i = 
+    \lr{\prod_{j < i} i\bar{c}_j c_j} 
+    c_i
+,\quad
+\sigma^y_i = 
+    \lr{\prod_{j < i} i\bar{c}_j c_j} 
+    \bar{c}_i 
+\]
+
+\[
+    H 
+    = 
+    \sum_{r}
+    J_x\sigma^x_{rA}\sigma^x_{rB}
+    +
+    J_y\sigma^y_{rB}\sigma^y_{r+1,A} 
+    =
+    \sum_{r}
+    \lr{
+    -
+    iJ_x \bar{c}_{rA} c_{rB}
+    +
+    iJ_y c_{rB} \bar{c}_{r+1, A}
+    }   
+\]
+
+\[
+\left\{
+\begin{aligned}
+    & \sigma^x_{rA}\sigma^x_{rB} = -i\bar{c}_{rA} c_{rB} \\
+    & \sigma^y_{rB}\sigma^y_{r+1,A} = ic_{rB} \bar{c}_{r+1, A}
+\end{aligned}
+\right.
+\]
+
+\[
+\lr{\sigma^x_{rA}\sigma^x_{rB}}
+\lr{\sigma^y_{rB}\sigma^y_{r+1,A}}
+=
+\bar{c}_{rA} \bar{c}_{r+1, A}
+\]
+Valid correlators should be of the form $\anglelr{\bar{c}_{i A} c_{j B}}$.
+
+\[
+\left\{
+\begin{aligned}
+    & \sigma^x_{rA}\sigma^y_{rB} = -i\bar{c}_{rA} \bar{c}_{rB} \\
+    & \sigma^x_{rB}\sigma^y_{r+1,A} = i\bar{c}_{rB} \bar{c}_{r+1, A}
+\end{aligned}
+\right.
+\]
+
+Note that the Wilson loop operator is equivalent to the total fermion parity, which is a conserved quantum number.
+\begin{align*}
+\prod_{\anglelr{ij}}\dimer{i}{j}
+&=
+\lr{
+    \prod_{r=1}^{N-1}
+    \sigma^x_{rA}\sigma^x_{rB}
+    \sigma^y_{rB}\sigma^y_{r+1,A}
+}
+\sigma^x_{NA}\sigma^x_{NB}
+\sigma^y_{NB}\sigma^y_{1A} \\
+&=
+\bar{c}_{1A}\bar{c}_{NA}
+\lr{-i\bar{c}_{NA}c_{NB}}
+\lr{\prod_{j< NB} i\bar{c}_j c_j}
+\bar{c}_{NB}\bar{c}_{1A} \\
+&=
+-\prod_{j}i\bar{c}_j c_j = -\prod_{j}\sigma^z_j = -(-1)^{F} \equiv -\tilde{Z}
+\end{align*}
+We have to choose one of the sectors to fix the fermion parity. This is equivalent to fixing the superselection sector. In addition, the model possesses a $\mathbb{Z}_2$ symmetry, so the following operator commutes with the Hamiltonian and serves as a global symmetry operation
+\[
+\tilde{X} \equiv 
+\prod_{i}\sigma^x_i
+=
+\prod_{r}
+\lr{-i\bar{c}_{rA} c_{rB}}.
+\]
+Therefore, we can also fix the eigenvalue of $\tilde{X}$ to be either $+1$ or $-1$. As a result, \textbf{the ground state is four-fold degenerate, and one needs to select one of the superselection sectors labeled by $\lrg{\tilde{X},\tilde{Z}}$}. 
+\[
+    H
+    =
+    \sum_{r}
+    \begin{pmatrix}
+        \bar{c}_{kA} \\
+        c_{kB}
+    \end{pmatrix}^\dagger
+    \begin{pmatrix}
+        0 & s_k \\
+        s_k^* & 0
+    \end{pmatrix}
+    \begin{pmatrix}
+        \bar{c}_{kA} \\
+        c_{kB}
+    \end{pmatrix} 
+\]
+where $s_k = -iJ_x + iJ_y e^{-ik}$.
+\[
+\frac{1}{\sqrt{2}}
+\begin{pmatrix}
+    1 & e^{i\theta_k} \\
+    e^{-i\theta_k} & -1
+\end{pmatrix}
+\begin{pmatrix}
+    0 & s_k \\
+    s_k^* & 0
+\end{pmatrix}
+\frac{1}{\sqrt{2}}
+\begin{pmatrix}
+    1 & e^{i\theta_k} \\
+    e^{-i\theta_k} & -1
+\end{pmatrix}
+=
+\begin{pmatrix}
+    +\abs{s_k} & 0 \\
+    0 & -\abs{s_k}
+\end{pmatrix}
+\]
+\[
+\frac{1}{\sqrt{2}}
+\begin{pmatrix}
+    1 & e^{i\theta_k} \\
+    e^{-i\theta_k} & -1
+\end{pmatrix}
+\begin{pmatrix}
+    \bar{c}_{kA} \\
+    c_{kB}
+\end{pmatrix} 
+=
+\frac{1}{\sqrt{2}}
+\begin{pmatrix}
+    \bar{c}_{kA} + e^{i\theta_k} c_{kB} \\
+    e^{-i\theta_k}\bar{c}_{kA} - c_{kB}
+\end{pmatrix}
+\equiv
+\begin{pmatrix}
+    b_k \\
+    a_k
+\end{pmatrix}
+\]
+The ground state of the model is the state with the lower band $a_k$ fully occupied. Therefore, the correlation function of $a_k$ satisfies $\anglelr{a^\dagger_k a_{k'}} = \delta_{kk'}$ and $\anglelr{a_k a_{k'}} = 0$. With this, the correlation function of the Majorana fermions is
+\begin{align*}
+    \anglelr{\bar{c}_{iA} c_{jB}}
+    &=
+    \frac{1}{N}
+    \sum_{k,k'}e^{i(kj - k'i)} \anglelr{\bar{c}_{k A}^\dagger c_{k'B}} \\
+    &=
+    \frac{1}{N}
+    \sum_{k,k'}e^{i(kj - k'i)} 
+    \frac{1}{2}
+    \anglelr{
+    \lr{b_{k}^\dagger + e^{-i\theta_{k}}a_{k}^\dagger}
+    \lr{e^{-i\theta_k}b_{k'} - a_{k'}}
+    }\\
+    &=
+    -\frac{1}{2N}
+    \sum_{k}
+    e^{i\lrm{k(j-i) - \theta_k}} 
+\end{align*}
+Note that $N$ denotes the number of Bravais lattices, which is equal to half of the number of lattice sites in this case.
+
+\begin{equation}
+    \anglelr{i\bar{c}_{iA} c_{jB}}
+    =
+    \frac{1}{2N}\sum_{k}
+    \frac{
+        J_x \cos\lrm{k\lr{j-i}} 
+        - 
+        J_y \cos\lrm{k\lr{j-i+1}} 
+    }
+    {\sqrt{J_x^2 + J_y^2 - 2J_xJ_y\cos k}}
+\end{equation}
+
+In the continuum limit, the correlation function can be obtained iteratively. The function $I_m$ defined as
+\[
+I_m \equiv 
+\frac{1}{2\pi}
+\int_{-\pi}^{\pi}
+\frac{\cos(mk)}{\sqrt{J_x^2 + J_y^2 - 2J_xJ_y\cos k}} \mrm{d}k
+\]
+satisfies the recurrence relation
+\[
+(2m+1)J_xJ_y I_{m+1}
+-
+2m(J_x^2 + J_y^2)I_m
++
+(2m-1)J_xJ_y I_{m-1}
+=
+0
+\]
+
+In the 1D model, the fermions $\bar{c}_{rB}$ and $c_{rA}$ are not included in the Hamiltonian, so they are redundant degrees of freedom.
+\[
+\left\{
+\begin{aligned}
+    & \sigma^x_{rB}\sigma^x_{r+1,A} = -i\bar{c}_{rB} c_{r+1,A} \\
+    & \sigma^y_{rA}\sigma^y_{rB} = ic_{rA} \bar{c}_{rB}
+\end{aligned}
+\right.
+\]
+
+Note that the $\xi$ operators also commute with the Hamiltonian. Therefore, the ground state is actually extensively degenerate, and we need to apply the projector to pin down the sectors. Otherwise, the ground state will be a mixed state.
+\[
+    \rho
+    =
+    C
+    \lr{\frac{\mathds{1} + \tilde{Z}}{2}}
+    \prod_{\hat{\xi}\in\Omega}
+    \lr{\frac{\mathds{1} + \hat{\xi}}{2}}
+    \sum_{[\mathfrak{D}]}
+    \mathfrak{C}_\mathfrak{D}
+    \Sigma_\mathfrak{D}
+\]
+The $\hat{\xi}$ operators are defined as follows.
+\[
+\hat{\xi}_{ij} = \sigma^z_i\Sigma_{\overline{ij}}\sigma^z_j
+\]
+We have to note that different choices of the spatial arrangement of the $\hat{\xi}$ operators correspond to different ways of dividing the Hilbert space into degenerate topological sectors for the 1D system. Consider two different ways, $\Omega$ and $\Omega'$, of defining $\hat{\xi}$ operators, where $\Omega$ set contains $\hat{\xi}_{\overline{rA,rB}}$ and $\Omega'$ contains $\hat{\xi}_{\overline{rB,(r+1)A}}$. The Pauli algebra implies that the two operators anticommute: $\lrg{\hat{\xi}_{\overline{rA,rB}}, \hat{\xi}_{\overline{rB,(r+1)A}}} = 0$. Therefore, the operator $\hat{\xi}_{\overline{rB,(r+1)A}}$ in $\Omega'$ can flip the operator $\hat{\xi}_{\overline{rA,rB}}$ in $\Omega$, which is equivalent to transform the state labeled by the $xi$ operators arranged in $\Omega$ with $\xi_{\overline{rA,rB}}$ in $\Omega = +1$ to the one with $\xi_{\overline{rA,rB}}$ in $\Omega = +1$. This pattern is similar to the toric code model, where we also have multiple choices to define the four degenerate topological sectors. We emphasize that the choice of the spatial arrangement $\Omega$ for the $\hat{\xi}$ operators is not merely a gauge convention, but a manual selection of the topological sector within the degenerate ground-state manifold. Just as in the toric code, where choosing different Wilson loop invariants ($W_x$ vs. $W_z$) selects distinct physical ground states with different entanglement spectra, defining $\hat{\xi}$ via $\Omega$ versus $\Omega'$ fixes a specific state in the 1D topological sector. Because these sector-labeled states are non-trivial superpositions of each other, their entangling properties across a spatial boundary $\partial A$ naturally reflect the chosen topological sector.
+
+We also have to point out that string operators and the $\xi$ operators are not completely independent, since the standard arrangement of defining the $\xi$ operators leads to the following identity
+\begin{equation}
+    \prod_{i}\hat{\xi}_i \propto \tilde{X} 
+    \propto 
+    \Sigma_{\mathfrak{D}_{\tilde{X}}}
+\end{equation}
+
+\[
+    \Tr\rho
+    =
+    \frac{C}{2^{N_\xi + 1}}
+    \lr{\mathfrak{C}_\varnothing + \mathfrak{C}_{\mathfrak{D}_{\tilde{X}}}}
+    2^{N}
+    =
+    1
+\]
+Therefore, the density matrix is
+\begin{equation}
+    \rho
+    =
+    \frac{1}{2^{N - N_\xi}}
+    \lr{\frac{\mathds{1} + \tilde{Z}}{2}}
+    \prod_{\hat{\xi}\in\Omega}
+    \lr{\frac{\mathds{1} + \hat{\xi}}{2}}
+    \sum_{[\mathfrak{D}]}
+    \mathfrak{C}_\mathfrak{D}
+    \Sigma_\mathfrak{D}
+\end{equation}
+
+\begin{align*}
+    \rho^2
+    &=
+    \frac{1}{2^{2(N - N_\xi)}}
+    \lr{\frac{\mathds{1} + \tilde{Z}}{2}}
+    \prod_{\hat{\xi} \in \Omega}
+    \lr{\frac{\mathds{1} + \hat{\xi}}{2}}
+    \sum_{[\mathfrak{D}], [\mathfrak{D}']}
+    \mathfrak{C}_{\mathfrak{D}}
+    \mathfrak{C}_{\mathfrak{D}'}
+    \varphi(\mathfrak{D},\mathfrak{D}')
+    \Sigma_{\mathfrak{D}\ominus\mathfrak{D}'} \\
+    &=
+    \frac{1}{2^{2(N - N_\xi)}}
+    \lr{\frac{\mathds{1} + \tilde{Z}}{2}}
+    \prod_{\hat{\xi} \in \Omega}
+    \lr{\frac{\mathds{1} + \hat{\xi}}{2}}
+    \sum_{
+    [\mathfrak{D}''], [\mathfrak{D}']
+    }
+    \mathfrak{C}_{\mathfrak{D}''\ominus\mathfrak{D}'}
+    \mathfrak{C}_{\mathfrak{D}'}
+    \varphi(\mathfrak{D}''\ominus\mathfrak{D}',\mathfrak{D}')
+    \Sigma_{\mathfrak{D}''} \\
+    &=\rho
+\end{align*}
+
+\[
+\sum_{[\mathfrak{D}]} \eta_\mathfrak{D}\mathfrak{C}_{\mathfrak{D}}^2
+=
+2^{N - N_\xi}
+\]
+
+
+The reduced density matrix can be constructed straightforwardly
+\begin{align*}
+    \rho_A
+    =
+    \Tr_{\overline{A}}\rho
+    &=
+    \frac{1}{2^{N - N^A_\xi + 1}}
+    \prod_{\hat{\xi} \in \tilde{\Omega}_A}\lr{\frac{\mathds{1} + \hat{\xi}}{2}}
+    \sum_{[\mathfrak{D}]}
+    \mathfrak{C}_\mathfrak{D} 
+    \Tr_{\overline{A}}
+    \lrm{
+        \prod_{\hat{\xi} \in \Omega}
+        \lr{\mathds{1} + \hat{\xi}}
+        \Sigma_\mathfrak{D} 
+    }
+    \\
+    &=
+    \frac{1}{2^{N - N^A_\xi + 1}}
+    \prod_{\hat{\xi} \in \tilde{\Omega}_A}\lr{\frac{\mathds{1} + \hat{\xi}}{2}}
+    \sum_{[\mathfrak{D}]}
+    \mathfrak{C}_\mathfrak{D} 
+    \Tr_{\overline{A}}
+    \lrm{
+        \lr{
+            \mathds{1} + \tilde{X}
+        }
+        \Sigma_\mathfrak{D} 
+    } 
+    \\
+    &=
+    \frac{1}{2^{N^A - N^A_\xi}}
+    \prod_{\hat{\xi} \in \tilde{\Omega}_A}
+    \lr{\frac{\mathds{1} + \hat{\xi}}{2}}
+    \sum_{[\mathfrak{D}]\subset A} \mathfrak{C}_\mathfrak{D} \Sigma_\mathfrak{D}
+\end{align*}
+\alert{But the choice and the pattern of the arrangement of the $\xi$ operators are a kind of artificial.}
+
+\begin{align*}
+    \Tr_A\rho_A^2
+    &=
+    \frac{1}{2^{2\lr{N^A - N^A_\xi}}}
+    \sum_{[\mathfrak{D}],[\mathfrak{D}']\subset A}
+    \mathfrak{C}_\mathfrak{D}\mathfrak{C}_{\mathfrak{D}\ominus\mathfrak{D}'}
+    \varphi(\mathfrak{D},\mathfrak{D}\ominus\mathfrak{D}')
+    \Tr_A\lrm{
+        \prod_{\hat{\xi} \in \tilde{\Omega}_A}
+        \lr{\frac{\mathds{1} + \hat{\xi}}{2}}
+        \Sigma_{\mathfrak{D}'}
+    }
+    \\
+    &=
+    \frac{1}{2^{N^A - N^A_\xi}}
+    \sum_{[\mathfrak{D}]\subset A} \eta_\mathfrak{D} \mathfrak{C}_\mathfrak{D}^2
+\end{align*}
+Therefore, the 2-R\'enyi entropy reads
+\begin{equation}
+    R_2(\rho_A)
+    =
+    -\ln\lr{
+    \frac{1}{2^{N^A - N^A_\xi}}
+    \sum_{[\mathfrak{D}] \subset A} \eta_\mathfrak{D}\mathfrak{C}_\mathfrak{D}^2
+    }
+\end{equation}
+The gauge contribution to the entanglement entropy is zero.
+\[
+\lr{\frac{1}{2}\abs{\de A} - 1} = \frac{1}{2}\times 2 - 1 = 0
+\]
+
+Now we turn to the stabilizer R\'enyi entropy.
+\begin{align*}
+    \sum_{\mathsf{S}\in\tilde{\mathcal{P}}_{N^A}} \Tr_A^4 (\rho_A \mathsf{S})
+    &=
+    \frac{1}{2^{4N^A}}
+    \sum_{\mathsf{S} \in \tilde{\mathcal{P}}_{N^A}}
+    \lrg{
+        \sum_{\varpi \subset \tilde{\Omega}_A}
+        \sum_{[\mathfrak{D}]\subset A}
+        \mathfrak{C}_\mathfrak{D}
+        \Tr_A\lrm{
+            \lr{\prod_{\hat{\xi}\in\varpi}\hat{\xi}}
+            \Sigma_\mathfrak{D}
+            \mathsf{S}
+        }
+    }^4 \\
+    &=
+    2^{N_\xi^A}
+    \sum_{[\mathfrak{D}]\subset A} \mathfrak{C}_\mathfrak{D}^4
+\end{align*}
+
+\begin{equation}
+    \tilde{M}_2
+    =
+    -\ln\lr{
+    \frac{1}{2^{N^A - N_\xi^A}} \sum_{[\mathfrak{D}]\subset A}\mathfrak{C}_\mathfrak{D}^4
+    }
+    +
+    \ln\lr{
+    \frac{1}{2^{N^A - N_\xi^A}} \sum_{[\mathfrak{D}]\subset A} 
+    \eta_\mathfrak{D}
+    \mathfrak{C}_\mathfrak{D}^2
+    }
+    =
+    -\lr{
+    \frac{\sum_{[\mathfrak{D}]\subset A} \mathfrak{C_\mathfrak{D}}^4}
+    {\det\lr{\mathds{1} + \mathsf{C}_A}}
+    }
+\end{equation}
+
 \section{Finite-Size Correlation}
 As mentioned in our work~\cite{wang2026exactorganizationdensitymatrices}, at the ground state, the multi-spin correlation function of the Kitaev model is finite if and only if it can be written in the form of a string. Therefore, we only need to discuss the following form of the correlation function
 \[
