@@ -1,9 +1,109 @@
 %%%%%%%%%%%%% intro %%%%%%%%%%%%%
+{\alert{spin representation: to discuss quantum magic, since it relies on Pauli group elements}
+
+\alert{matter-gauge separation}
+
+In this work, we utilize the DM of the Kitaev ground state proposed in an earlier work \cite{wang2026exactorganizationdensitymatrices} to study the physical structure of quantum magic of the Kitaev spin liquid. We first review the organized structure of the DM and RDM to demonstrate how the organization of the density matrix reflects the separation of the gauge and matter sectors. Later, we elucidate the role of the two sectors in the quantum magic theory and prove that the matter sector governs the non-stabilizerness of the Kitaev spin liquid. 
+}
 
 %%%%%%%%%%%%% fundamental %%%%%%%%%%%%%
-% dentiy matrix and its organization
+% Density matrix and its organization
+{
+\textit{edge configurations}, denoted by $\mathfrak{D}$ as appeared in Eq.~\eqref{equ.only-finite-correlation}, are sets consisting of edges in the lattice. Their \textit{symmetric difference}, denoted by $\ominus$, is defined as
+\[
+\mathfrak{D}\ominus\mathfrak{D}' \equiv \mathfrak{D}\cup\mathfrak{D}'-\mathfrak{D}\cap\mathfrak{D}'
+\]
+Properties such as commutativity $\mathfrak{D}\ominus\mathfrak{D}' = \mathfrak{D}'\ominus\mathfrak{D}$ and associativity $\lr{\mathfrak{D}_1\ominus\mathfrak{D}_2}\ominus\mathfrak{D}_3 = \mathfrak{D}_1\ominus\lr{\mathfrak{D}_2\ominus\mathfrak{D}_3}$ can be verified directly. This algebra has three other properties exhibiting its $\mathbb{Z}_2$ nature: (i) $\varnothing\ominus\varnothing = \varnothing$, (ii) $\varnothing\ominus\mathfrak{D}=\mathfrak{D}$, and (iii) $\mathfrak{D}\ominus\mathfrak{D} = \varnothing$. These features enable it to describe the strings, which will be introduced later, since they are also $\mathbb{Z}_2$ objects that square to one. An example that illustrates the rule is given below
+\[
+\lr{\wordfig{1.6}{figures/oplus_1}}
+\ominus
+\lr{\wordfig{1.6}{figures/oplus_2}} 
+= 
+\lr{\wordfig{1.6}{figures/oplus_result}},
+\]
+where thick edges are those in the edge configurations, and the hollow edges with dotted boundaries on the right-hand side of the equation represent the annihilated edges since they belong to the intersection of the two string configurations. The algebra $\anglelr{\lrg{\mathfrak{D}},\ominus}$ is the fundamental constituent of the algebraic operations throughout this work. 
+
+With the edge configurations, we define \emph{string operators} $\Sigma_\mathfrak{D}$ corresponding to different configurations $\mathfrak{D}$
+\begin{equation}\label{equ.string-operator-def}
+    \Sigma_\mathfrak{D} \equiv \prod_{\anglelr{ij}\in \mathfrak{D}}\sigma^{\alpha_{ij}}_i\sigma_j^{\alpha_{ij}}.
+\end{equation}
+The order of multiplying dimer operators $\dimer{i}{j}$ in the above product is also important, because two dimer operators anti-commute if they share a common endpoint. In a finite system, we can label the edges and multiply the dimer operators in order of this labeling to fix the ambiguity of the sign of the string operators. Due to the anti-commutation relation of Pauli spin operators, the string operators give a projective representation of the algebra $\anglelr{\lrg{\mathfrak{D}},\ominus}$ with a phase factor $\varphi(\mathfrak{D},\mathfrak{D}')=\pm 1$,
+\begin{equation}\label{equ.Sigma-representation}
+\Sigma_{\mathfrak{D}}\Sigma_{\mathfrak{D}'} = \varphi(\mathfrak{D},\mathfrak{D}') \Sigma_{\mathfrak{D}\ominus\mathfrak{D}'}.
+\end{equation}
+}
 
 %%%%%%%%%%%%% magic %%%%%%%%%%%%%
+{
+\[
+    \ket{\mrm{Gnd}}
+    =
+    C(\phi)
+    \underbrace{
+    \hat{\Pi}
+    }_{\text{gauge}}
+    \underbrace{
+    \lrm{
+        \frac{1}{2^{N/2}}
+        \sum_{[\mathfrak{D}]} \mathfrak{C}_{\mathfrak{D}}
+        \Sigma_\mathfrak{D}
+    }
+    }_{\text{matter}}
+    \ket{\phi}
+\]
+\[
+\hat{\Pi}
+=
+\lr{\frac{\mathds{1} + \tilde{W}_v}{2}} 
+    \lr{\frac{\mathds{1} + \tilde{W}_h}{2}}
+    \prod_{p} \lr{\frac{\mathds{1} + W_p}{2}}
+\]
+
+
+%%%%%% pure state
+The $n$-\textit{stabilizer R\'enyi entropy} is defined as~\cite{Leone-Oliviero-Hamma_2022},
+\begin{equation}\label{eq:stab-renyi-def}
+    M_{n}\lr{\ket{\psi}} := 
+    \frac{1}{1 - n} 
+    \ln\lr{
+        \sum_{\mathsf{S}\in\tilde{\mathcal{P}}_N}
+        \frac{1}{2^N}
+        \Tr\lr{\rho\mathsf{S}}^{2n}
+    }
+\end{equation}
+where $\rho = \ket{\psi}\bra{\psi}$ is the pure state density matrix of $\ket{\psi}$.
+
+Substituting this result into the SRE formula, we obtain
+\begin{equation}
+    M_n\lr{\ket{\mrm{Gnd}}} 
+    =
+    \frac{1}{1 - n}
+    \ln\lr{
+        \frac{1}{2^{N/2}}
+        \sum_{[\mathfrak{D}]} \eta_\mathfrak{D}^n \mathfrak{C}_\mathfrak{D}^{2n}
+    }
+\end{equation}
+
+%%%%%% subsystem SRE
+Together, the SRE for the reduced density matrix reduces to the following form,
+\begin{equation}\label{eq:RDM-SRE}
+    \tilde{M}_2\lr{\rho_A} = 
+    -\ln\lr{
+        \frac{
+        \sum_{[\mathfrak{D}]\subset A} \mathfrak{C}_\mathfrak{D}^4 
+        }
+        {
+        \det\lr{
+            \mathds{1} + \mathsf{C}_A
+        }
+        } 
+    }
+    .
+\end{equation}
+}
 
 %%%%%%%%%%%%% result %%%%%%%%%%%%%
 % numerical simulations
+
+%%%%%%%%%%%%% discussion %%%%%%%%%%%%%
+% related works
