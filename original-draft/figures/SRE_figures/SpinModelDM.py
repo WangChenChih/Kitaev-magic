@@ -1643,54 +1643,117 @@ class SpinSystem:
         
         return -np.log(enumerator / denominator)
 
-    def mutial_SRE_1D_region(self, L:int, l:int, update:bool=False)->float:
+    def SRE_1D(self, Jx:float=None,  Jy:float=None,
+               tot_length:int=None, thermo_limit:bool=False, update:bool=False):
+        """
+        Calculate the 2-SRE of a 1D Kitaev system. 
+        NOTE: The subsystem SRE calculated by this function is NOT deducted by the Renyi entropy of the subsystem.
+        
+        ``tot_length``: the length of the entire spin chain
+        ``thermo_limit``: set to be ``True`` if the length of the entire spin chain is infinity
+        ``corr_table_sys_size``: the system size of the corresponding correlation table that will be used to calculate the coefficient
+        ``update``: update the corrlation table or not.
+        """
+        Jx_old, Jy_old, Jz_old = self.Jx, self.Jy, self.Jz
+
+        self.Jz = 0 # decoupling the chains
+        if not Jx is None:
+            self.Jx = Jx
+        if not Jy is None:
+            self.Jy = Jy
+
+        self.height = 1 # this function consider only the spin chain
+
+        if tot_length is None and thermo_limit==False:
+            raise KeyError('Please set the variable ``tot_length`` or make ``thermo_limit`` true. Otherwise, please use the function stab_renyi_entropy for calculating the pure state SRE.')
+
+        # self.full_corr_mat_update(tot_size=tot_size)
+        coe_info = np.array(list(self.calculate_CoefficientTable(update=update, 
+                                                                 tot_size=[tot_length, 2],
+                                                                corr_table_sys_size=[tot_length, 1]).values()))
+        coe_array = coe_info[:,1]
+
+        # zero_point_entropy = 0
+        # if self.width == tot_length:    # calculating the entropy of the pure state (the entire system)
+        #     if self.width%4 == 0:   # k=1/2 hits the energy-zero point, contributing an entropy ln2
+        #         zero_point_entropy = np.log(2)
+
+        self.Jx, self.Jy, self.Jz = Jx_old, Jy_old, Jz_old  # restore the coupling strength
+        
+        return -np.log(np.sum(coe_array**4) / 2**(self.N/2)) # - zero_point_entropy
+
+    def mutual_SRE_1D(self, Jx:float,  Jy:float,
+                      L:int, l:int, update:bool=False)->float:
+        """
+        Calculating the mutual stabilizer renyi entropy of a Kitaev chain.
+        ``L`` is the length of the entire system (PBC), and ``l | (L-l)`` is the division of the system
+
+        The definition of the mutual SRE reads
+        ```
+        SRE_l + SRE_env - SRE_loop
+        ```
+        where ``SRE_l`` is the subsystem SRE of length ``l``
+        ``SRE_env`` is the subsystem SRE of length ``(L - l)``
+        """
+        Jx_old, Jy_old, Jz_old = self.Jx, self.Jy, self.Jz
+
+        self.Jz = 0 # decoupling the chains
+        self.Jx, self.Jy = Jx, Jy
+        
         if L%2==1:
             raise ValueError('L, the length along the xy-direction, must be even to agree with the periodic boundary condition')
         if L < 4:
             raise ValueError('L is too small. It must be larger than 4')
         
         self.width, self.height = l, 1
-        SRE_l = self.RDM_2_stab_renyi_entropy(tot_size=[L, 'infty'], 
-                                              corr_table_sys_size=[L, 1],
-                                              update=update)
+        SRE_l = self.SRE_1D(tot_length=L,  update=update)
+        
         if l%2 == 1:
             self.ini_lat_type = 'A'
         self.width, self.height = L-l, 1
-        SRE_env = self.RDM_2_stab_renyi_entropy(tot_size=[L, 'infty'], 
-                                                corr_table_sys_size=[L, 1],
-                                                update=update)
+        SRE_env = self.SRE_1D(tot_length=L,  update=update)
+        
         if l%2 == 1:    # restore the setting
             self.ini_lat_type = 'B'    
         self.width, self.height = L, 1
-        SRE_loop = self.RDM_2_stab_renyi_entropy(tot_size=[L, 'infty'], 
-                                                corr_table_sys_size=[L, 1],
-                                                update=update)
+        SRE_loop = self.SRE_1D(tot_length=L,  update=update)
+        
         print(f'SRE_l={SRE_l}, SRE_env={SRE_env}, SRE_loop={SRE_loop}')
+
+        self.Jx, self.Jy, self.Jz = Jx_old, Jy_old, Jz_old  # restore the coupling strength
+
         return SRE_l + SRE_env - SRE_loop
 
-    def renyi_entropy_lin_region(self, tot_size:list[int,int]=None, thermo_limit:bool=False, 
-                                corr_table_sys_size:list[int,int]=None, update:bool=False):
-        self.thermo_limit = thermo_limit    # note that if termo_limit is true, then the tot_size won't be taken.
+    def renyi_entropy_1D(self, Jx:float, Jy:float, 
+                            tot_length:int=None, thermo_limit:bool=False, 
+                            corr_table_sys_size:list[int,int]=None, update:bool=False):
+        """
+        This function calculates the 2-Renyi entropy of a Kitaev chain (xy-alterating chain, not the Kitaev spin chain model).  
+        ``tot_length``: the length of the entire spin chain
+        ``thermo_limit``: set to be ``True`` if the length of the entire spin chain is infinity
+        ``corr_table_sys_size``: the system size of the corresponding correlation table that will be used to calculate the coefficient
+        ``update``: update the corrlation table or not.
+        """
+        self.Jz = 0 # decoupling the chains
+        self.Jx, self.Jy = Jx, Jy
+
         if self.height != 1:
             raise ValueError('This function only calculates the entropy of linear regions that the height must be 1')
-        if tot_size is None and thermo_limit==False:
-            raise KeyError('Please set the variable ``tot_size`` or make ``thermo_limit`` true. Otherwise, please use the function stab_renyi_entropy for calculating the pure state SRE.')
+        if tot_length is None and thermo_limit==False:
+            raise KeyError('Please set the variable ``tot_length`` or make ``thermo_limit`` true. Otherwise, please use the function stab_renyi_entropy for calculating the pure state SRE.')
         
-        self.full_corr_mat_update(tot_size=tot_size, 
+        self.full_corr_mat_update(tot_size=[tot_length, 2], # the height can actually be arbitrary, since the chains are decoupled 
                                   corr_table_sys_size=corr_table_sys_size, 
                                   update=update)
         entropy = -np.log(la.det(np.eye(self.N) + self.full_corr_mat) / (2**(self.N / 2)))
-        # intrinsic_entropy = (tot_size[0]/2 + 1 - (tot_size[0]/2)%2) * np.log(2)
-        entropy = entropy # - intrinsic_entropy
 
-        # coe_info = np.array(list(self.calculate_CoefficientTable(update=update, tot_size=tot_size,
-        #                                                                  corr_table_sys_size=corr_table_sys_size).values()))
-        # coe_array = coe_info[:,1]
-        # entropy = -np.log(np.sum(coe_array**2) / (2**self.N))
+        zero_point_entropy = 0
+        if self.width == tot_length:    # calculating the entropy of the pure state (the entire system)
+            if self.width%4 == 0:   # k=1/2 hits the energy-zero point, contributing an entropy ln2
+                zero_point_entropy = np.log(2)
 
-        # corr_mat_spec = la.eigvals(self.full_corr_mat)
-        # print(corr_mat_spec)
-        # print(np.eye(self.N) + self.full_corr_mat)
+        entropy = entropy - zero_point_entropy
+
         print(f'L={self.width}, Renyi entropy={entropy}')
         
         return entropy
