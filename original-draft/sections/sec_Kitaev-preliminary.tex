@@ -376,10 +376,32 @@ Therefore, the 2-R\'enyi entropy reads
 \end{equation}
 The gauge contribution to the entanglement entropy is zero.
 \[
-\lr{\frac{1}{2}\abs{\de A} - 1} = \frac{1}{2}\times 2 - 1 = 0
+    \lr{\frac{1}{2}\abs{\de A} - 1} = \frac{1}{2}\times 2 - 1 = 0
 \]
 
-Now we turn to the stabilizer R\'enyi entropy.
+Now we turn to the stabilizer R\'enyi entropy. The pure-state SRE can be obtained straightforwardly. The expectation value of each Pauli string is
+\begin{align*}
+    \sum_{\mathsf{S}\in\tilde{\mathcal{P}}_{N}} \Tr^4 (\rho \mathsf{S})
+    &=
+    \sum_{\mathsf{S}\in\tilde{\mathcal{P}}_{N}} \Tr^4 (\rho \mathsf{S}) \\
+    &=
+    \frac{1}{2^{4N + 4}}
+    \sum_{\mathsf{S} \in \tilde{\mathcal{P}}_{N}}
+    \lrg{
+        \sum_{\varpi \subset \Omega}
+        \sum_{[\mathfrak{D}]}
+        \mathfrak{C}_\mathfrak{D}
+        \Tr\lrm{
+            \lr{\mathds{1} + \tilde{Z}}
+            \lr{\prod_{\hat{\xi}\in\varpi}\hat{\xi}}
+            \Sigma_\mathfrak{D}
+            \mathsf{S}
+        }
+    }^4 \\
+    &=
+    \frac{1}{2^{4}} 
+    2^{N_\xi + 2}   \sum_{[\mathfrak{D}]} \mathfrak{C}_\mathfrak{D}^4
+\end{align*}
 \begin{align*}
     \sum_{\mathsf{S}\in\tilde{\mathcal{P}}_{N^A}} \Tr_A^4 (\rho_A \mathsf{S})
     &=
@@ -413,7 +435,7 @@ Now we turn to the stabilizer R\'enyi entropy.
     \mathfrak{C}_\mathfrak{D}^2
     }
     =
-    -\lr{
+    -\ln\lr{
     \frac{\sum_{[\mathfrak{D}]\subset A} \mathfrak{C_\mathfrak{D}}^4}
     {\det\lr{\mathds{1} + \mathsf{C}_A}}
     }
