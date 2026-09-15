@@ -423,6 +423,22 @@ Now we turn to the stabilizer R\'enyi entropy. The pure-state SRE can be obtaine
 \end{align*}
 
 \begin{equation}
+    M_2(\rho_A)
+    \equiv
+    -\ln\lr{
+        \frac{1}{2^{N^A}}
+        \sum_{\mathsf{S}\in\tilde{\mathcal{P}}_{N^A}}
+        \Tr^4\lr{
+        \rho_A \mathsf{S}
+        }
+    }
+    =
+    -\ln\lr{
+    \frac{1}{2^{N^A - N_\xi^A}} \sum_{[\mathfrak{D}]\subset A}\mathfrak{C}_\mathfrak{D}^4
+    }
+\end{equation}
+
+\begin{equation}
     \tilde{M}_2
     =
     -\ln\lr{
@@ -440,6 +456,13 @@ Now we turn to the stabilizer R\'enyi entropy. The pure-state SRE can be obtaine
     {\det\lr{\mathds{1} + \mathsf{C}_A}}
     }
 \end{equation}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\linewidth]{figures/SRE_figures/figures/stab-renyi-entropy/mutual_SRE.pdf}
+    \caption{The mutual SRE of the 1D Kitaev model at the gapless point as a function of division. The equation satisfies $W_2(l) = \frac{1}{4}\ln l_c$.}
+    \label{fig:1D-mutual-SRE}
+\end{figure}
 
 \section{Finite-Size Correlation}
 As mentioned in our work~\cite{wang2026exactorganizationdensitymatrices}, at the ground state, the multi-spin correlation function of the Kitaev model is finite if and only if it can be written in the form of a string. Therefore, we only need to discuss the following form of the correlation function
