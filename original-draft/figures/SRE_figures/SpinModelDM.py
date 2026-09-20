@@ -58,6 +58,9 @@ class SpinSystem:
         self._CoeTable_loaded = False   # if the CoeTable has been loaded, then keep it to avoid repleatedly loeading it again and again.
         self._CoeTable = None
 
+        self._CorrTable_loaded = False   # if the CorrTable has been loaded, then keep it to avoid repleatedly loeading it again and again.
+        self._CorrTable = None
+
         self.full_corr_mat = None
 
         self._thermo_limit = thermo_limit
@@ -82,6 +85,8 @@ class SpinSystem:
         self.full_corr_mat = None
         self._CoeTable_loaded = False   # reload the CoeTable if the parameter is changed
         self._CoeTable = None
+        self._CorrTable_loaded = False
+        self._CoeTable = None
         self.approx_bound = None
         return
     
@@ -94,6 +99,8 @@ class SpinSystem:
         self.full_corr_mat = None
         self._CoeTable_loaded = False   # reload the CoeTable if the parameter is changed
         self._CoeTable = None
+        self._CorrTable_loaded = False
+        self._CoeTable = None
         self.approx_bound = None
         return
     
@@ -105,6 +112,8 @@ class SpinSystem:
         self._Jz = Jz
         self.full_corr_mat = None
         self._CoeTable_loaded = False   # reload the CoeTable if the parameter is changed
+        self._CoeTable = None
+        self._CorrTable_loaded = False
         self._CoeTable = None
         self.approx_bound = None
         return
@@ -120,6 +129,8 @@ class SpinSystem:
         if not os.path.isdir(self.datapath):
             self.calculate_CorrTable()
         self._CoeTable_loaded = False   # reload the CoeTable if the parameter is changed
+        self._CorrTable_loaded = False
+        self._CoeTable = None
         self.approx_bound = None
         return
 
@@ -131,6 +142,8 @@ class SpinSystem:
         self._thermo_limit = thermo_limit
         self.full_corr_mat = None
         self._CoeTable_loaded = False
+        self._CoeTable = None
+        self._CorrTable_loaded = False
         self._CoeTable = None
         self.approx_bound = None
         return
@@ -145,6 +158,8 @@ class SpinSystem:
         self._ini_lat_type = ini_lat_type
         self.full_corr_mat = None
         self._CoeTable_loaded = False   # reload the CoeTable if the parameter is changed
+        self._CoeTable = None
+        self._CorrTable_loaded = False
         self._CoeTable = None
         self.approx_bound = None
         return
@@ -167,6 +182,8 @@ class SpinSystem:
         self.full_corr_mat = None
         self._CoeTable_loaded = False
         self._CoeTable = None
+        self._CorrTable_loaded = False
+        self._CoeTable = None
         return
 
     @property
@@ -178,6 +195,8 @@ class SpinSystem:
         self.N = int(self._width * self._height)
         self.full_corr_mat = None
         self._CoeTable_loaded = False
+        self._CoeTable = None
+        self._CorrTable_loaded = False
         self._CoeTable = None
         return
 
@@ -439,8 +458,13 @@ class SpinSystem:
             else:
                 corr_value = self.corr_engine(n1=n1, n2=n2)
         else:
-            with open(self.datapath + '/' + filename, "r") as file:
-                CorrTable = json.load(file)
+            if self._CorrTable_loaded:          # use the loaded correlation table directly to avoid opening the CorrTable repeatedly
+                CorrTable = self._CorrTable
+            else:
+                with open(self.datapath + '/' + filename, "r") as file:
+                    CorrTable = json.load(file)
+                self._CorrTable = CorrTable     # update self._CorrTable
+                self._CorrTable_loaded = True   # update the status
 
             x1, y1, mu1 = self.dictionary_n_to_c(label=n1) 
             x2, y2, mu2 = self.dictionary_n_to_c(label=n2)
