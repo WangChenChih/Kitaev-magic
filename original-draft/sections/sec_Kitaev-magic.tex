@@ -290,3 +290,122 @@ Now, let's turn to the Pauli spectrum.
 
 
 
+\section{Stabilizer States, Polytope and Magic}
+A stabilizer state of an $n$-qubit system is determined by the generators $\lrg{P_1, P_2,\cdots, P_n}$ of the stabilizer group $\mathcal{G} = \anglelr{P_1, P_2, \cdots, P_n}$ in the following way,
+\[
+\zeta_\mathcal{G}
+=
+\prod_{P \in \mathcal{G}}
+\lr{\frac{\mathds{1} + P}{2}}
+\]
+In other words, a stabilizer state uniquely corresponds to a set of stabilizer generators. 
+\[
+\mrm{STAB}
+=
+\lrg{
+\sum_{\mathcal{G}}x_\mathcal{G} \zeta_{\mathcal{G}}
+\;\bigg|\;
+x_\mathcal{G} \geq 0,\;
+\sum_{\mathcal{G}}x_\mathcal{G} = 1
+}
+\]
+This set is also called the \textit{stabilizer polytope}, and \textbf{a state lying in the stabilizer polytope is magic-free}. We would like to point out that every point in the set $\mrm{STAB}$ is a valid density matrix. This is because the stabilizer states $\zeta_\mathcal{G}$ that generate $\mrm{STAB}$ are valid pure-state density matrices, and an arbitrary convex mixture of density matrices is also a valid density matrix. On the other hand, this definition also broadens the original definition of stabilizer states to mixed states.
+\begin{equation}\label{eq:RoM-def}
+    \mathcal{R}[\rho]
+    =
+    \min_{\lrg{x_l}}
+    \lrg{
+    \sum_{l} \abs{x_l}
+    \; \bigg| \;
+    \rho = \sum_{\mathcal{G}}x_\mathcal{G} \zeta_\mathcal{G}
+    ,\;
+    x_\mathcal{G} \in \mathbb{R}
+    ,\;
+    \sum_{\mathcal{G}} x_\mathcal{G} = 1
+    }
+\end{equation}
+Note that the quantity interprets the negativity since
+\[
+\sum_{\mathcal{G}} \abs{x_\mathcal{G}}
+=
+\sum_{x_\mathcal{G} > 0} x_\mathcal{G}
+-
+\sum_{x_\mathcal{G}\leq 0} x_\mathcal{G}
+=
+1 + 2\sum_{x_\mathcal{G} \leq 0} \abs{x_\mathcal{G}}
+\]
+Because a magical state cannot be represented as a convex mixture of stabilizer states, $\lrg{x_\mathcal{G}}$ must have negative components for a magical state $\rho$ to be represented in the form given in \eqref{eq:RoM-def}. Therefore, the RoM is larger than one $\mathcal{R}[\rho] > 1$ if the state $\rho$ is magical, making it a measure of non-stabilizerness.
+
+\[
+b_j \equiv
+\Tr\lr{\rho \mathsf{S}_j} 
+=
+\sum_{\mathcal{G}} x_\mathcal{G} \Tr\lr{\zeta_\mathcal{G} \mathsf{S}_j}
+\equiv 
+\sum_{\mathcal{G}} 
+A_{j\mathcal{G}} x_\mathcal{G}
+\]
+
+\[
+\sum_{j} A_{\mathcal{G}j}A_{j\mathcal{G}}
+=
+\sum_{j} 
+\bra{\zeta_\mathcal{G}} \mathsf{S}_j \ket{\zeta_\mathcal{G}}^2 = 2^n
+\Longrightarrow
+A^T A = 2^n\mathbf{1}_n
+\]
+\[
+A^T \mathbf{b} = \mathbf{x}
+\]
+
+\[
+\mathcal{R}[\rho]
+=
+\min_{\mathbf{z}}
+\lrg{
+\mathbf{1}^T \mathbf{z}
+\;|\;
+-\mathbf{z} \leq \mathbf{x} \leq \mathbf{z} 
+,\;
+\mathbf{x} = A^{-1} \mathbf{b}
+}
+\]
+\[
+\mathcal{R}[\rho]
+=
+\max_{\mathbf{y}}
+\lrg{
+\mathbf{b}^T \mathbf{y}
+\;|\;
+-\mathbf{1} \leq A^T\mathbf{y} \leq \mathbf{1}
+}
+\]
+Define
+\begin{equation}\label{eq:magic-witness}
+    W_{\mathbf{y}} = \sum_{j} y_j \mathsf{S}_j.
+\end{equation}
+The dual condition implies
+\[
+\abs{\bra{\zeta_\mathcal{G}} W \ket{\zeta_\mathcal{G}}}
+=
+\abs{
+\Tr \lr{W\zeta_\mathcal{G}} 
+}
+=
+\abs{
+    \sum_{j}y_j \Tr\lr{\zeta_{\mathcal{G}}\mathsf{S}_j}
+}
+=
+\abs{A^T\mathbf{y}}
+\leq 1 \;, \quad
+\forall \mathcal{G}
+\]
+At the optimal point of this linear program, we obtain the optimal magic witness 
+\[
+W^* = \sum_{j} y^*_j\mathsf{S}_j,
+\]
+which satisfies 
+\[
+\mathcal{R}[\rho] = \Tr\lr{W^*\rho} = \sum_{j}y^*_j\Tr\lr{\rho\mathsf{S}_j} = \mathbf{b}^T\mathbf{y}^*
+\]
+The paper \cite{Sabharwal-Shannon-Skrzypczyk_2026} investigates the structure of the optimal witness operator $W^*$ at the onset temperature where quantum magic starts to take shape. It happens that the magic onset temperature is near the critical temperature of the phase transition between the paramagnet and the phase where the Majorana fermions are itinerant.
