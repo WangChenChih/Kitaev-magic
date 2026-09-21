@@ -1657,12 +1657,17 @@ class SpinSystem:
             raise KeyError('Please set the variable ``tot_size`` or make ``thermo_limit`` true. Otherwise, please use the function stab_renyi_entropy for calculating the pure state SRE.')
         
         # self.full_corr_mat_update(tot_size=tot_size)
-        coe_info = np.array(list(self.calculate_CoefficientTable(update=update, tot_size=tot_size,
+        print('unpack the dictionary')
+        coe_info = np.array(list(self.calculate_CoefficientTable(update=update, 
+                                                                 tot_size=tot_size,
                                                                  corr_table_sys_size=corr_table_sys_size).values()))
         coe_array = coe_info[:,1]
         # print(coe_array)
-        # denominator = la.det(np.eye(self.N) + self.full_corr_mat)
-        denominator = np.sum(coe_array**2)
+        if self.full_corr_mat is None:
+            self.full_corr_mat_update(corr_table_sys_size=corr_table_sys_size)
+        denominator = la.det(np.eye(self.N) + self.full_corr_mat)
+        # denominator = np.sum(coe_array**2)
+        print('compute the SRE')
         enumerator = np.sum(coe_array**4)
         
         return -np.log(enumerator / denominator)
@@ -2003,3 +2008,20 @@ def corr_pfaffian_calculator(mat:np.ndarray, endpointset:np.ndarray)->float:
                     cor_mat[j,i] = - cor_mat[i,j]
         cor_pfa = pf.pfaffian(cor_mat)
     return cor_pfa
+
+def derivative_1st(x_data:list, y_data:list)->tuple[np.ndarray,np.ndarray]:
+    x_len, y_len = len(x_data), len(y_data)
+    if x_len != y_len:
+        raise ValueError('The sizes of the two arrays do not match.')
+    x_output, y_output = np.zeros(int(x_len - 1)), np.zeros(int(x_len - 1))
+    for n in range(x_len-1):
+        x_output[n] = (x_data[n+1] + x_data[n])/2
+        y_output[n] = (y_data[n+1] - y_data[n]) / (x_data[n+1] - x_data[n])
+    return x_output, y_output
+
+def derivative_2nd(x_data:list, y_data:list)->tuple[np.ndarray,np.ndarray]:
+    x_len, y_len = len(x_data), len(y_data)
+    if x_len != y_len:
+        raise ValueError('The sizes of the two arrays do not match.')
+    x_data_1st, y_data_1st = derivative_1st(x_data=x_data, y_data=y_data)   # first derivative
+    return derivative_1st(x_data=x_data_1st, y_data=y_data_1st)   # second derivative
