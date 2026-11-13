@@ -1892,6 +1892,70 @@ class SpinSystem:
         Dy = (1 - (Jx/Jy)**2)**0.25 if Jy > Jx else 0.0
         return Dx, Dy
 
+    ################### local SRE of the infinite (or periodic) 1D Kitaev chain ###################
+
+    def local_SRE_1D(self, Jx:float=None, Jy:float=None, l:int=None,
+                     tot_length:int=None, thermo_limit:bool=True,
+                     deduct_renyi_entropy:bool=True)->float:
+        """
+        2-SRE of the reduced density matrix of ``l`` consecutive spins of a 1D Kitaev chain
+        (xy-alternating chain, ``Jz = 0``, ``h = 0``).
+
+        ``l``: length of the subsystem (must be even, see the NOTE below)
+        ``tot_length``: the length of the entire (periodic) spin chain
+        ``thermo_limit``: ``True`` (default) for an infinitely long chain; then ``tot_length`` is not used.
+        ``deduct_renyi_entropy``: if ``True`` (default) the output is the mixed-state SRE
+        ```
+        M_2(rho_l) = - ln( sum_P <P>^4 / sum_P <P>^2 ) = SRE_1D(l) - renyi_entropy_1D(l)
+                   = - ln( sum_D C_D^4 / det(1 + C) )                    (same as RDM_2_stab_renyi_entropy)
+        ```
+        If ``False``, the output is ``- ln( 2^{-l/2} sum_D C_D^4 )``, i.e. what ``SRE_1D`` returns for a
+        subsystem (NOT deducted by the Renyi entropy of the subsystem).
+
+        The segment starts at the lattice site with label 0 and sublattice ``self.ini_lat_type``:
+        'B' -> the first bond of the segment is a Y-bond (coupling ``Jy``), 'A' -> an X-bond (coupling ``Jx``).
+
+        NOTE: the sum over D carries the factor 2^{l/2} of ``SRE_1D``: the free (gauge) Majorana modes d_n are
+        in a pure state, paired within the segment. This requires an even ``l``.
+        For a finite ring (``thermo_limit=False``) the periodic k-sum corresponds to the lowest state of the ring only for
+        ``tot_length % 4 == 2`` (checked against exact diagonalization for tot_length = 10, 14; for tot_length = 12 the ground
+        state sits in the other fermion-parity sector, cf. the zero-point correction in ``renyi_entropy_1D``). The infinite chain is not affected.
+
+        The sum over the 2^l strings is done over the square minors of the A-B correlation block, so the cost
+        is binom(l, l/2) determinants: l <= ~24 is fine.
+        """
+        if l is None or int(l) != l or l < 2 or l % 2 == 1:
+            raise ValueError('``l`` must be an even integer >= 2')
+        l = int(l)
+        if tot_length is None and not thermo_limit:
+            raise KeyError('Please set the variable ``tot_length`` or make ``thermo_limit`` true.')
+        if not thermo_limit and tot_length <= l:
+            raise ValueError('``tot_length`` must be larger than ``l``. For the pure state SRE of the entire chain use ``SRE_1D``.')
+        if self.h != 0:
+            raise ValueError('this function is for h = 0')
+
+        Jx_old, Jy_old, Jz_old = self.Jx, self.Jy, self.Jz
+        try:
+            Jx_new = Jx_old if Jx is None else Jx
+            Jy_new = Jy_old if Jy is None else Jy
+            self.Jz = 0 # decoupling the chains
+            if self.ini_lat_type == 'A':    # the segment starts with an X-bond: same as starting with a Y-bond and Jx <-> Jy
+                Jx_new, Jy_new = Jy_new, Jx_new
+            self.Jx, self.Jy = Jx_new, Jy_new
+
+            C = self.chain_corr_matrix(sites=list(range(l)),
+                                       tot_length=None if thermo_limit else tot_length)
+        finally:
+            self.Jx, self.Jy, self.Jz = Jx_old, Jy_old, Jz_old  # restore the coupling strength
+
+        setA, setB = ABsort(list(range(l)))
+        sum_C4 = pfaffian_power_sum(mat=C, setA=setA, setB=setB, power=4)
+        SRE = -np.log(sum_C4 / 2**(l/2))                    # = SRE_1D of the segment
+        if not deduct_renyi_entropy:
+            return SRE
+        renyi_entropy = -np.log(la.det(np.eye(l) + C) / 2**(l/2))   # = renyi_entropy_1D of the segment
+        return SRE - renyi_entropy
+
 ################################## extra functions ##################################
 
 ############# helpers for the string order parameters
@@ -1915,6 +1979,25 @@ def _chain_pair_type(mu1:int, mu2:int)->str:
     if mu1 == 1 and mu2 == 0:
         return 'AB'
     return 'BA'
+
+def pfaffian_power_sum(mat:np.ndarray, setA:list, setB:list, power:int=4)->float:
+    """
+    sum_D |Pf(mat_D)|^power over all endpoint configurations D (all even subsets of the sites), i.e. ``sum_D C_D^power``.
+    For h = 0 the A-A and B-B correlators vanish, so Pf(mat_D) = +-det(mat[D_A, D_B]) is nonzero only if |D_A| = |D_B|,
+    and the sum is the sum of ``power``-th powers of all square minors of G = mat[setA, setB] (the empty D gives 1).
+    Check: ``power=2`` reproduces ``det(1 + mat)``.
+    """
+    from itertools import combinations
+    G = np.asarray(mat)[np.ix_(setA, setB)]
+    nA, nB = G.shape
+    total = 1.0     # k = 0 : the vacuum configuration
+    for k in range(1, min(nA, nB) + 1):
+        cols = np.array(list(combinations(range(nB), k)))       # (Ncols, k)
+        for rows in combinations(range(nA), k):
+            sub = G[list(rows)][:, cols]                        # (k, Ncols, k)
+            dets = np.linalg.det(np.transpose(sub, (1, 0, 2)))  # (Ncols,)
+            total += float(np.sum(dets**power))
+    return total
 
 
 def PauliMultRule(type1:str, type2:str)->tuple[np.complex64, str]:
