@@ -1787,7 +1787,135 @@ class SpinSystem:
         
         return entropy
 
+    ################### string order parameters (single chain) ###################
+    # Feng, Zhang, Xiang, arXiv:cond-mat/0610626, Eqs. (7)-(8):
+    #   Delta_x(j) = < prod_{k=1}^{2j}   sigma^x_k >   finite for J1 > J2  (J1 = Jx, J2 = Jy)
+    #   Delta_y(j) = < prod_{k=2}^{2j+1} sigma^y_k >   finite for J1 < J2
+    # Valid for the decoupled single chain: height = 1, Jz = 0, h = 0, ini_lat_type = 'B'.
+    # With these settings the Y-bonds are (2m, 2m+1) and the X-bonds are (2m+1, 2m+2), so
+    #   Delta_x(j) = product of j X-bond operators starting at site 1,
+    #   Delta_y(j) = product of j Y-bond operators starting at site 0.
+    # Each bond operator is +-(-i c_a c_b), hence (Wick)  <Delta(j)> = (+-1)^j Pf(C[sites, sites]),
+    # with C_ab = <-i c_a c_b> (the same Pfaffian as in ``Coefficient_engine``).
+
+    def _check_chain(self):
+        if self.ini_lat_type != 'B':
+            raise ValueError("string order functions assume ``ini_lat_type='B'``")
+        if self.Jz != 0:
+            raise ValueError("single-chain limit requires Jz = 0 (decoupled chains)")
+        if self.h != 0:
+            raise ValueError("these string operators are for h = 0")
+
+    def chain_corr_matrix(self, sites:list, tot_length:int=None, cache:dict=None)->np.ndarray:
+        """
+        C_ij = <-i c_i c_j> for the chain sites listed in ``sites`` (labels, in the given order).
+
+        ``tot_length``: length L (even) of the periodic chain containing the segment. If None, the
+        thermodynamic limit L -> infinity is used (2D integral).
+        ``cache``: optional dict reused between calls; entries depend only on (dx, dy, pair type).
+        Unlike ``corr``, no json table is read or written, and the segment may be longer than ``self.width``.
+        """
+        if cache is None:
+            cache = {}
+        sites = list(sites)
+        M = len(sites)
+        C = np.zeros((M, M))
+        for a in range(M):
+            x1, y1, mu1 = _chain_coord(sites[a])
+            for b in range(a+1, M):
+                x2, y2, mu2 = _chain_coord(sites[b])
+                dx, dy, pt = x2 - x1, y2 - y1, _chain_pair_type(mu1, mu2)
+                key = (dx, dy, pt, tot_length)
+                if key not in cache:
+                    if tot_length is None:
+                        cache[key] = self.corr_thermo_limit_engine_c(dx=dx, dy=dy, pair_type=pt)
+                    else:   # height-1 torus: k2 = 0 only, k1 on L/2 points (same as SRE_1D)
+                        cache[key] = self.corr_engine_c(dx=dx, dy=dy, pair_type=pt,
+                                                        tot_size=[tot_length, 1])
+                C[a, b] = cache[key]
+                C[b, a] = -C[a, b]
+        return C
+
+    def string_order_profile(self, direction:str, jmax:int,
+                             tot_length:int=None, cache:dict=None)->np.ndarray:
+        """
+        <Delta_hat(j)> for j = 1, ..., jmax; ``direction`` = 'x' or 'y'.
+
+        'x': prod_{k=1}^{2j} sigma^x_k      (X-bonds (1,2), (3,4), ...)
+        'y': prod_{k=2}^{2j+1} sigma^y_k    (Y-bonds (0,1), (2,3), ...)
+
+        All j are obtained from ONE correlation matrix: Delta(j) = sign^j * Pf(C[:2j,:2j]).
+        For a periodic chain the string must not wrap around: 2*jmax <= tot_length - 2.
+        Note the staggered sign (-1)^j of the profile (dual chain is antiferromagnetic); the order
+        parameter is the magnitude.
+        """
+        self._check_chain()
+        d = direction.lower()
+        if d not in ('x', 'y'):
+            raise ValueError("``direction`` must be 'x' or 'y'")
+        if tot_length is not None and 2*jmax > tot_length - 2:
+            raise ValueError("the string would wrap around the ring: need 2*jmax <= tot_length - 2")
+
+        start = 1 if d == 'x' else 0
+        C = self.chain_corr_matrix(sites=list(range(start, start + 2*jmax)),
+                                   tot_length=tot_length, cache=cache)
+        sign = STRING_BOND_SIGN[d]
+        out = np.empty(jmax)
+        for j in range(1, jmax + 1):
+            pfa = corr_pfaffian_calculator(mat=C, endpointset=np.arange(2*j, dtype=np.int64))
+            out[j-1] = (sign**j) * pfa
+        return out
+
+    def string_order_x(self, j:int, tot_length:int=None, cache:dict=None)->float:
+        """<prod_{k=1}^{2j} sigma^x_k>   (Eq. 7)"""
+        return self.string_order_profile('x', j, tot_length, cache)[-1]
+
+    def string_order_y(self, j:int, tot_length:int=None, cache:dict=None)->float:
+        """<prod_{k=2}^{2j+1} sigma^y_k>   (Eq. 8)"""
+        return self.string_order_profile('y', j, tot_length, cache)[-1]
+
+    def string_order_limit(self, direction:str, jmax:int=12, tot_length:int=None,
+                           cache:dict=None, tail:int=3)->float:
+        """
+        Estimate of Delta_x or Delta_y = lim_{j->inf} |<Delta_hat(j)>|: the mean of |Delta(j)| over
+        the last ``tail`` values of the profile. Converges exponentially in the ordered phase, decays
+        to 0 in the disordered phase, and decays as a power law at J1 = J2.
+        """
+        prof = self.string_order_profile(direction, jmax, tot_length, cache)
+        return float(np.mean(np.abs(prof[-tail:])))
+
+    @staticmethod
+    def string_order_analytic(Jx:float, Jy:float)->tuple[float, float]:
+        """Eq. (6): Delta_x = [1-(J2/J1)^2]^{1/4} (J1 > J2), Delta_y = [1-(J1/J2)^2]^{1/4} (J1 < J2).
+        Returns (Delta_x, Delta_y)."""
+        Dx = (1 - (Jy/Jx)**2)**0.25 if Jx > Jy else 0.0
+        Dy = (1 - (Jx/Jy)**2)**0.25 if Jy > Jx else 0.0
+        return Dx, Dy
+
 ################################## extra functions ##################################
+
+############# helpers for the string order parameters
+
+# sigma^a_n sigma^a_{n+1} = STRING_BOND_SIGN[a] * (-i c_n c_{n+1}) in the gauge used by SpinSystem
+# (fixed by comparison with exact diagonalization; reproduces the (-1)^j of Eq. (7) in the paper)
+STRING_BOND_SIGN = {'x': -1, 'y': +1}
+
+def _chain_coord(n:int)->tuple[int, int, int]:
+    """(m1, m2, mu) of label n in a height-1 system with ini_lat_type='B'. Same formulas as
+    ``SpinSystem.dictionary_n_to_c`` but without the width-dependent wrapping."""
+    sr, sq = n % 2, n // 2
+    return sq + sr, -sr, n % 2
+
+def _chain_pair_type(mu1:int, mu2:int)->str:
+    """Same convention as ``SpinSystem.corr_engine``."""
+    if mu1 == 1 and mu2 == 1:
+        return 'AA'
+    if mu1 == 0 and mu2 == 0:
+        return 'BB'
+    if mu1 == 1 and mu2 == 0:
+        return 'AB'
+    return 'BA'
+
 
 def PauliMultRule(type1:str, type2:str)->tuple[np.complex64, str]:
     '''
